@@ -1,15 +1,16 @@
-package lib
+package woutils
 
 import (
 	"log"
 
+	wointerfaces "github.com/joaovitor123jv/wo-engine/wo-interfaces"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
 type GameContext struct {
 	mouseMovementListeners []func(x, y int32) bool
 	mouseClickListeners    []func(x, y int32, button uint8, isPressed bool) bool
-	renderQueue            []Renderable
+	renderQueue            []wointerfaces.Renderable
 }
 
 func NewContext() GameContext {

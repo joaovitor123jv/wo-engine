@@ -4,15 +4,10 @@ import (
 	"log"
 	"runtime"
 
-	"github.com/joaovitor123jv/wo-engine/lib"
 	"github.com/veandco/go-sdl2/img"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
-
-type Renderable lib.Renderable
-type Hideable lib.Hideable
-type GameContext lib.GameContext
 
 type Game struct {
 	gameName   string

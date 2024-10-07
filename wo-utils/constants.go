@@ -1,0 +1,6 @@
+package woutils
+
+const (
+	INIT_SCREEN_WINDOW_WIDTH  int32 = 800
+	INIT_SCREEN_WINDOW_HEIGHT int32 = 600
+)

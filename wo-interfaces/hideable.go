@@ -1,4 +1,4 @@
-package lib
+package wointerfaces
 
 type Hideable interface {
 	Hide()
