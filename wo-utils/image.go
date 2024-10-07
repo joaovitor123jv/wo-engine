@@ -7,10 +7,12 @@ import (
 )
 
 type Image struct {
-	texture   *sdl.Texture
-	destRect  sdl.Rect
-	imagePath string
-	canRender bool
+	texture       *sdl.Texture
+	destRect      sdl.Rect
+	srcRect       sdl.Rect
+	customSrcRect bool
+	imagePath     string
+	canRender     bool
 }
 
 func NewImage(renderer *sdl.Renderer, imagePath string) Image {
@@ -33,36 +35,71 @@ func NewImage(renderer *sdl.Renderer, imagePath string) Image {
 			W: width,
 			H: height,
 		},
-		canRender: true,
+		srcRect:       sdl.Rect{},
+		customSrcRect: false,
+		canRender:     true,
 	}
 }
 
-func (this *Image) Destroy() {
-	this.texture.Destroy()
+func (i *Image) FillArea(x, y, width, height int32) {
+	i.destRect.X = x
+	i.destRect.Y = y
+	i.destRect.W = width
+	i.destRect.H = height
 }
 
-func (this *Image) Render(renderer *sdl.Renderer) {
-	if !this.canRender {
+func (i *Image) CentralizeOn(x, y int32) {
+	i.destRect.X = x - i.destRect.W/2
+	i.destRect.Y = y - i.destRect.H/2
+}
+
+func (i *Image) SetSrcRect(x, y, w, h int32) {
+	i.srcRect = sdl.Rect{
+		X: x,
+		Y: y,
+		W: w,
+		H: h,
+	}
+	i.customSrcRect = true
+}
+
+func (i *Image) SetSize(width, height int32) {
+	i.destRect.W = width
+	i.destRect.H = height
+}
+
+func (i *Image) Destroy() {
+	if i.texture != nil {
+		i.texture.Destroy()
+	}
+}
+
+func (i *Image) Render(renderer *sdl.Renderer) {
+	if !i.canRender {
 		return
 	}
 
-	renderer.Copy(this.texture, nil, &this.destRect)
+	if i.customSrcRect {
+		renderer.Copy(i.texture, &i.srcRect, &i.destRect)
+	} else {
+		renderer.Copy(i.texture, nil, &i.destRect)
+	}
 }
 
-func (this *Image) Hide() {
-	this.canRender = false
+func (i *Image) Hide() {
+	i.canRender = false
 }
 
-func (this *Image) Show() {
-	this.canRender = true
+func (i *Image) Show() {
+	i.canRender = true
 }
 
-func (this *Image) ToggleVisibility() {
-	this.canRender = !this.canRender
+func (i *Image) ToggleVisibility() {
+	i.canRender = !i.canRender
 }
 
-func (this *Image) FollowCursor(x, y int32) bool {
-	this.destRect.X = x
-	this.destRect.Y = y
+func (i *Image) FollowCursor(x, y int32) bool {
+	i.destRect.X = x
+	i.destRect.Y = y
 	return false
 }
