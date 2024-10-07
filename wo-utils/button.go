@@ -25,11 +25,6 @@ const (
 	Disabled
 )
 
-const (
-	ClickBehavior ButtonBehavior = iota
-	ToggleBehavior
-)
-
 //go:embed assets/images/buttons/*.png
 var buttonImages embed.FS
 
@@ -62,7 +57,6 @@ func NewButton() Button {
 		disabledTexture: nil,
 		state:           Idle,
 		size:            MediumButton,
-		behaviour:       ClickBehavior,
 		canRender:       true,
 		onClick:         nil,
 	}
@@ -78,88 +72,90 @@ func NewButtonWithText(renderer *sdl.Renderer, text string) Button {
 	button.setDefaultPressed(renderer)
 	button.setDefaultDisabled(renderer)
 
-	width, height := button.text.GetDimensions()
-	button.destRect.W = width + 40
-	button.destRect.H = height + 40
-	button.text.SetPosition(button.destRect.X+15, button.destRect.Y+15)
+	button.updateDimensions()
 	return button
 }
 
-func (this *Button) Render(renderer *sdl.Renderer) {
-	if this.canRender == false {
-		return
+func (b *Button) updateDimensions() {
+	if b.text != nil {
+		width, height := b.text.GetDimensions()
+		b.destRect.W = width + 40
+		b.destRect.H = height + 40
+		b.text.SetPosition(b.destRect.X+15, b.destRect.Y+15)
 	}
+}
 
+func (b *Button) Render(renderer *sdl.Renderer) {
 	var texture *sdl.Texture = nil
 
-	switch this.state {
+	switch b.state {
 	case Idle:
-		texture = this.idleTexture
+		texture = b.idleTexture
 	case Pressed:
-		texture = this.pressedTexture
+		texture = b.pressedTexture
 	case Hover:
-		texture = this.hoverTexture
+		texture = b.hoverTexture
 	case Active:
-		texture = this.pressedTexture
+		texture = b.pressedTexture
 	case Disabled:
-		texture = this.disabledTexture
+		texture = b.disabledTexture
 	}
 
-	renderer.Copy(texture, nil, this.destRect.AsSdlRect())
+	renderer.Copy(texture, nil, b.destRect.AsSdlRect())
 
-	if this.text != nil {
-		this.text.Render(renderer)
+	if b.text != nil {
+		b.text.Render(renderer)
 	}
 }
 
-func (this *Button) Hide() {
-	this.canRender = false
+func (b *Button) Hide() {
+	b.canRender = false
 }
 
-func (this *Button) Show() {
-	this.canRender = true
+func (b *Button) Show() {
+	b.canRender = true
 }
 
-func (this *Button) ToggleVisibility() {
-	this.canRender = !this.canRender
+func (b *Button) ToggleVisibility() {
+	b.canRender = !b.canRender
 }
 
-func (this *Button) MouseMovementListener(x, y int32) bool {
-	if this.state == Pressed {
+func (b *Button) MouseMovementListener(x, y int32) bool {
+	if b.state == Pressed {
 		return true
 	}
 
-	if this.destRect.IsPointInside(x, y) {
-		this.state = Hover
+	if b.destRect.IsPointInside(x, y) {
+		b.state = Hover
 		return true
 	}
 
-	this.state = Idle
+	b.state = Idle
 	return false
 }
 
-func (this *Button) MouseClickListener(x, y int32, button uint8, isPressed bool) bool {
-	if this.state == Disabled {
+func (b *Button) MouseClickListener(x, y int32, button uint8, isPressed bool) bool {
+	if b.state == Disabled {
 		return false
 	}
 
 	if button == sdl.BUTTON_LEFT {
 		if isPressed {
-			if this.destRect.IsPointInside(x, y) {
-				this.state = Pressed
+			if b.destRect.IsPointInside(x, y) {
+				b.state = Pressed
 				return true
 			}
 		}
 
-		if this.state == Pressed && !isPressed {
-			if this.destRect.IsPointInside(x, y) {
-				this.state = Hover
+		if b.state == Pressed && !isPressed {
+			if b.destRect.IsPointInside(x, y) {
+				b.state = Hover
 			} else {
-				this.state = Idle
+				b.state = Idle
 			}
 
-			if this.onClick != nil {
-				this.onClick()
+			if b.onClick != nil {
+				b.onClick()
 				return true
 			}
 		}
@@ -168,129 +164,95 @@ func (this *Button) MouseClickListener(x, y int32, button uint8, isPressed bool)
 	return false
 }
 
-func (this *Button) OnClick(onClick func()) {
-	this.onClick = onClick
+func (b *Button) OnClick(onClick func()) {
+	b.onClick = onClick
 }
 
-func (this *Button) AddListeners(screenContext *GameContext) {
-	screenContext.AddMouseMovementListener(this.MouseMovementListener)
-	screenContext.AddMouseClickListener(this.MouseClickListener)
+func (b *Button) AddListeners(screenContext *GameContext) {
+	screenContext.AddMouseMovementListener(b.MouseMovementListener)
+	screenContext.AddMouseClickListener(b.MouseClickListener)
 }
 
-func (this *Button) SetPosition(x, y int32) {
-	if this.text != nil {
-		this.text.SetPosition(x+15, y+15)
-	}
+func (b *Button) SetPosition(x, y int32) {
+	b.destRect.SetPosition(x, y)
 
-	this.destRect.SetPosition(x, y)
+	if b.text != nil {
+		b.text.SetPosition(x+15, y+15)
+	}
 }
 
-func (this *Button) setDefaultIdle(renderer *sdl.Renderer) {
-	data, err := buttonImages.ReadFile("assets/images/buttons/idle.png")
+func getTextureFromEmbedFs(renderer *sdl.Renderer, path string) *sdl.Texture {
+	data, err := buttonImages.ReadFile(path)
 	if err != nil {
-		log.Fatalf("Failed to load default idle button image (%s): %s", err)
+		log.Fatalf("Failed to load default button image (%s): %s", path, err)
 	}
-	texture, err := LoadTextureFromEmbedFs(renderer, data)
-	if err != nil {
-		log.Fatalf("Failed to load default idle button texture (%s): %s", err)
-	}
-	this.idleTexture = texture
+
+	return LoadTextureFromEmbedFs(renderer, data)
 }
 
-func (this *Button) setDefaultPressed(renderer *sdl.Renderer) {
-	data, err := buttonImages.ReadFile("assets/images/buttons/pressed.png")
-	if err != nil {
-		log.Fatalf("Failed to load default pressed button image (%s): %s", err)
-	}
-	texture, err := LoadTextureFromEmbedFs(renderer, data)
-	if err != nil {
-		log.Fatalf("Failed to load default pressed button texture (%s): %s", err)
-	}
-	this.pressedTexture = texture
+func (b *Button) setDefaultIdle(renderer *sdl.Renderer) {
+	b.idleTexture = getTextureFromEmbedFs(renderer, "assets/images/buttons/idle.png")
 }
 
-func (this *Button) setDefaultHover(renderer *sdl.Renderer) {
-	data, err := buttonImages.ReadFile("assets/images/buttons/hover.png")
-	if err != nil {
-		log.Fatalf("Failed to load default hover button image (%s): %s", err)
-	}
-	texture, err := LoadTextureFromEmbedFs(renderer, data)
-	if err != nil {
-		log.Fatalf("Failed to load default hover button texture (%s): %s", err)
-	}
-	this.hoverTexture = texture
+func (b *Button) setDefaultPressed(renderer *sdl.Renderer) {
+	b.pressedTexture = getTextureFromEmbedFs(renderer, "assets/images/buttons/pressed.png")
 }
 
-func (this *Button) setDefaultDisabled(renderer *sdl.Renderer) {
-	data, err := buttonImages.ReadFile("assets/images/buttons/disabled.png")
-	if err != nil {
-		log.Fatalf("Failed to load default disabled button image (%s): %s", err)
-	}
-	texture, err := LoadTextureFromEmbedFs(renderer, data)
-	if err != nil {
-		log.Fatalf("Failed to load default disabled button texture (%s): %s", err)
-	}
-	this.disabledTexture = texture
+func (b *Button) setDefaultHover(renderer *sdl.Renderer) {
+	b.hoverTexture = getTextureFromEmbedFs(renderer, "assets/images/buttons/hover.png")
 }
 
-func (this *Button) SetIdle(renderer *sdl.Renderer, path string) {
+func (b *Button) setDefaultDisabled(renderer *sdl.Renderer) {
+	b.disabledTexture = getTextureFromEmbedFs(renderer, "assets/images/buttons/disabled.png")
+}
+
+func getTextureFromFile(renderer *sdl.Renderer, path string) *sdl.Texture {
 	texture, err := LoadTexture(renderer, path)
 	if err != nil {
-		log.Fatalf("Failed to load idle button image (%s) and convert to texture: %s", path, err)
+		log.Fatalf("Failed to load button image \"%s\" and convert to texture: %s", path, err)
 	}
 
-	this.idleTexture = texture
+	return texture
 }
 
-func (this *Button) SetPressed(renderer *sdl.Renderer, path string) {
-	texture, err := LoadTexture(renderer, path)
-	if err != nil {
-		log.Fatalf("Failed to load pressed button image (%s) and convert to texture: %s", path, err)
-	}
-
-	this.pressedTexture = texture
+func (b *Button) SetIdle(renderer *sdl.Renderer, path string) {
+	b.idleTexture = getTextureFromFile(renderer, path)
 }
 
-func (this *Button) SetHover(renderer *sdl.Renderer, path string) {
-	texture, err := LoadTexture(renderer, path)
-	if err != nil {
-		log.Fatalf("Failed to load hover button image (%s) and convert to texture: %s", path, err)
-	}
-
-	this.hoverTexture = texture
+func (b *Button) SetPressed(renderer *sdl.Renderer, path string) {
+	b.pressedTexture = getTextureFromFile(renderer, path)
 }
 
-func (this *Button) SetDisabled(renderer *sdl.Renderer, path string) {
-	texture, err := LoadTexture(renderer, path)
-	if err != nil {
-		log.Fatalf("Failed to load disabled button image (%s) and convert to texture: %s", path, err)
-	}
-
-	this.disabledTexture = texture
+func (b *Button) SetHover(renderer *sdl.Renderer, path string) {
+	b.hoverTexture = getTextureFromFile(renderer, path)
 }
 
-func (this *Button) Disable() {
-	this.state = Disabled
+func (b *Button) SetDisabled(renderer *sdl.Renderer, path string) {
+	b.disabledTexture = getTextureFromFile(renderer, path)
 }
 
-func (this *Button) Destroy() {
-	if this.idleTexture != nil {
-		this.idleTexture.Destroy()
+func (b *Button) Disable() {
+	b.state = Disabled
+}
+
+func (b *Button) Destroy() {
+	if b.idleTexture != nil {
+		b.idleTexture.Destroy()
 	}
 
-	if this.pressedTexture != nil {
-		this.pressedTexture.Destroy()
+	if b.pressedTexture != nil {
+		b.pressedTexture.Destroy()
 	}
 
-	if this.hoverTexture != nil {
-		this.hoverTexture.Destroy()
+	if b.hoverTexture != nil {
+		b.hoverTexture.Destroy()
 	}
 
-	if this.disabledTexture != nil {
-		this.disabledTexture.Destroy()
+	if b.disabledTexture != nil {
+		b.disabledTexture.Destroy()
 	}
 
-	if this.text != nil {
-		this.text.Destroy()
+	if b.text != nil {
+		b.text.Destroy()
 	}
 }

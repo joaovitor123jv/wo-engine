@@ -11,13 +11,45 @@ type GameContext struct {
 	mouseMovementListeners []func(x, y int32) bool
 	mouseClickListeners    []func(x, y int32, button uint8, isPressed bool) bool
 	renderQueue            []wointerfaces.Renderable
+	windowWidth            int32
+	windowHeight           int32
+	gameName               string
+	window                 *Window
+	renderer               *sdl.Renderer
 }
 
-func NewContext() GameContext {
+func NewContext(gameName string) GameContext {
 	return GameContext{
 		mouseMovementListeners: nil,
 		mouseClickListeners:    nil,
 		renderQueue:            nil,
+		windowWidth:            INIT_SCREEN_WINDOW_WIDTH,
+		windowHeight:           INIT_SCREEN_WINDOW_HEIGHT,
+		gameName:               gameName,
+		window:                 nil,
+		renderer:               nil,
+	}
+}
+
+func (gc *GameContext) Start() {
+	var err error
+	gc.window = NewWindow(gc.gameName, gc.windowWidth, gc.windowHeight)
+
+	if gc.renderer, err = sdl.CreateRenderer(gc.window.AsSDLWindow(), -1, sdl.RENDERER_ACCELERATED); err != nil {
+		log.Fatalf("Failed to create renderer: %s", err)
+	}
+}
+
+func (gc *GameContext) GetRenderer() *sdl.Renderer {
+	return gc.renderer
+}
+
+func (gc *GameContext) SetWindowSize(width, height int32) {
+	gc.windowWidth = width
+	gc.windowHeight = height
+
+	if gc.window != nil {
+		gc.window.SetSize(width, height)
 	}
 }
 
@@ -62,20 +94,34 @@ func (gc *GameContext) AddRenderable(thingToRender wointerfaces.Renderable) {
 	gc.renderQueue = append(gc.renderQueue, thingToRender)
 }
 
-func (gc *GameContext) Render(renderer *sdl.Renderer) {
+func (gc *GameContext) Render() {
+	if gc.renderer == nil {
+		panic("Renderer not initialized. Did you run Start()?")
+	}
+
 	// Limpa a tela com uma cor (neste caso, preta)
-	if err := renderer.SetDrawColor(20, 0, 20, 255); err != nil {
+	if err := gc.renderer.SetDrawColor(20, 0, 20, 255); err != nil {
 		log.Fatalf("Falha ao definir cor de desenho: %s", err)
 	}
 
-	if err := renderer.Clear(); err != nil {
+	if err := gc.renderer.Clear(); err != nil {
 		log.Fatalf("Falha ao limpar o renderer: %s", err)
 	}
 
 	for _, renderable := range gc.renderQueue {
-		renderable.Render(renderer)
+		renderable.Render(gc.renderer)
 	}
 
 	// Atualiza a janela com o frame atual
-	renderer.Present()
+	gc.renderer.Present()
+}
+
+func (gc *GameContext) Destroy() {
+	if gc.renderer != nil {
+		gc.renderer.Destroy()
+	}
+
+	if gc.window != nil {
+		gc.window.Destroy()
+	}
 }

@@ -9,38 +9,14 @@ import (
 )
 
 func main() {
-
 	game := woengine.NewGame("Warrior's Odyssey")
+
 	game.SetEntrypoint(func() bool {
-		windowWidth := woutils.INIT_SCREEN_WINDOW_WIDTH
-		windowHeight := woutils.INIT_SCREEN_WINDOW_HEIGHT
+		gameContext := woutils.NewContext("Init screen")
+		defer gameContext.Destroy()
 
-		var err error
-		var window *sdl.Window
-		var renderer *sdl.Renderer
-
-		// Cria a janela
-		if window, err = sdl.CreateWindow(
-			"Init Screen",
-			sdl.WINDOWPOS_UNDEFINED,
-			sdl.WINDOWPOS_UNDEFINED,
-			windowWidth,
-			windowHeight,
-			sdl.WINDOW_SHOWN,
-		); err != nil {
-			log.Fatalf("Failed to create window: %s", err)
-		}
-		defer window.Destroy()
-
-		window.SetResizable(true)
-
-		// Cria o renderer
-		if renderer, err = sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED); err != nil {
-			log.Fatalf("Failed to create renderer: %s", err)
-		}
-		defer renderer.Destroy()
-
-		gameContext := woutils.NewContext()
+		gameContext.Start() // The start method creates the window and renderer, you can also set the window size before calling it
+		renderer := gameContext.GetRenderer()
 
 		button := woutils.NewButtonWithText(renderer, "Press me")
 		defer button.Destroy()
@@ -74,7 +50,7 @@ func main() {
 				running = gameContext.HandleEvent(&event)
 			}
 
-			gameContext.Render(renderer)
+			gameContext.Render()
 
 			sdl.Delay(16)
 		}
