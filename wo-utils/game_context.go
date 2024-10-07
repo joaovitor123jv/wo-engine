@@ -58,7 +58,7 @@ func (gc *GameContext) HandleEvent(event *sdl.Event) bool {
 	return keepRunning
 }
 
-func (gc *GameContext) AddRenderable(thingToRender Renderable) {
+func (gc *GameContext) AddRenderable(thingToRender wointerfaces.Renderable) {
 	gc.renderQueue = append(gc.renderQueue, thingToRender)
 }
 
