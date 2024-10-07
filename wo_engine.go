@@ -2,6 +2,7 @@ package woengine
 
 import (
 	"log"
+	"runtime"
 
 	"github.com/veandco/go-sdl2/img"
 	"github.com/veandco/go-sdl2/sdl"
@@ -11,6 +12,11 @@ import (
 type Game struct {
 	gameName   string
 	entrypoint func() bool
+}
+
+func init() {
+	// Isso é necessário para gerenciar o contexto SDL na thread principal.
+	runtime.LockOSThread()
 }
 
 func NewGame(gameName string) Game {
