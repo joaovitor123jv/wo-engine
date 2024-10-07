@@ -1,0 +1,46 @@
+# Sistema Operacional
+.DS_Store
+.Spotlight-V100
+.Trashes
+
+# Arquivos Go compilados
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Diretório bin
+bin/
+
+# Diretório de dependências
+vendor/
+
+# Artefatos de construção
+*.o
+build/
+
+# Diretórios temporários do Go
+*.test
+*.cover
+
+# Cachês
+*.local
+
+# Configurações do editor
+.vscode/
+.idea/
+*.swp
+*~
+.project
+.classpath
+
+# Arquivos e diretórios gerados pelo comando go
+*.out
+
+# Arquivos de logs
+*.log
+
+# Outros arquivos temporários
+tmp/
+temp/
