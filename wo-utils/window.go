@@ -23,6 +23,11 @@ func NewWindow(title string, width int32, height int32) *Window {
 	return &Window{window}
 }
 
+func (w *Window) GetCenter() (int32, int32) {
+	width, height := w.Window.GetSize()
+	return width / 2, height / 2
+}
+
 func (w *Window) AsSDLWindow() *sdl.Window {
 	return w.Window
 }

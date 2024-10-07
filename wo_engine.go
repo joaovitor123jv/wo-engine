@@ -10,8 +10,7 @@ import (
 )
 
 type Game struct {
-	gameName   string
-	entrypoint func() bool
+	entrypoint func()
 }
 
 func init() {
@@ -19,14 +18,13 @@ func init() {
 	runtime.LockOSThread()
 }
 
-func NewGame(gameName string) Game {
+func NewGame() Game {
 	return Game{
-		gameName:   gameName,
 		entrypoint: nil,
 	}
 }
 
-func (g *Game) SetEntrypoint(entrypoint func() bool) {
+func (g *Game) SetEntrypoint(entrypoint func()) {
 	g.entrypoint = entrypoint
 }
 

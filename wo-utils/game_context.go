@@ -16,6 +16,7 @@ type GameContext struct {
 	gameName               string
 	window                 *Window
 	renderer               *sdl.Renderer
+	shouldExit             bool
 }
 
 func NewContext(gameName string) GameContext {
@@ -28,6 +29,7 @@ func NewContext(gameName string) GameContext {
 		gameName:               gameName,
 		window:                 nil,
 		renderer:               nil,
+		shouldExit:             false,
 	}
 }
 
@@ -40,8 +42,20 @@ func (gc *GameContext) Start() {
 	}
 }
 
+func (gc *GameContext) GetWindowSize() (int32, int32) {
+	return gc.windowWidth, gc.windowHeight
+}
+
+func (gc *GameContext) GetWindowCenter() (int32, int32) {
+	return gc.window.GetCenter()
+}
+
 func (gc *GameContext) GetRenderer() *sdl.Renderer {
 	return gc.renderer
+}
+
+func (gc *GameContext) StopExecution() {
+	gc.shouldExit = true
 }
 
 func (gc *GameContext) SetWindowSize(width, height int32) {
@@ -123,5 +137,20 @@ func (gc *GameContext) Destroy() {
 
 	if gc.window != nil {
 		gc.window.Destroy()
+	}
+}
+
+func (gc *GameContext) MainLoop() {
+	running := true
+
+	for running && !gc.shouldExit {
+		// Processa eventos
+		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+			running = gc.HandleEvent(&event)
+		}
+
+		gc.Render()
+
+		sdl.Delay(16)
 	}
 }
