@@ -30,6 +30,7 @@ const (
 	ToggleBehavior
 )
 
+//go:embed assets/images/buttons/*.png
 var buttonImages embed.FS
 
 type Button struct {

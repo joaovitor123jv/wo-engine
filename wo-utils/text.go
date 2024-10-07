@@ -1,6 +1,8 @@
 package woutils
 
 import (
+	"embed"
+
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
@@ -13,13 +15,63 @@ type Text struct {
 	canRender    bool
 }
 
+//go:embed assets/fonts/default.ttf
+var fontData embed.FS
+
 func NewText(renderer *sdl.Renderer, text string) Text {
 	var err error
 	var surfaceText *sdl.Surface
 	var renderedText *sdl.Texture
 	var font *ttf.Font
 
-	if font, err = ttf.OpenFont("assets/fonts/default.ttf", 16); err != nil {
+	fontBytes, err := fontData.ReadFile("assets/fonts/default.ttf")
+	if err != nil {
+		panic(err)
+	}
+
+	rwops, err := sdl.RWFromMem(fontBytes)
+	if err != nil {
+		panic(err)
+	}
+	defer rwops.Close()
+
+	font, err = ttf.OpenFontRW(rwops, 0, 16)
+	if err != nil {
+		panic(err)
+	}
+
+	if surfaceText, err = font.RenderUTF8Blended(text, sdl.Color{R: 255, G: 255, B: 255, A: 255}); err != nil {
+		panic(err)
+	}
+	defer surfaceText.Free()
+
+	if renderedText, err = renderer.CreateTextureFromSurface(surfaceText); err != nil {
+		panic(err)
+	}
+
+	_, _, width, height, err := renderedText.Query()
+
+	return Text{
+		text:         text,
+		renderedText: renderedText,
+		font:         font,
+		rect: sdl.Rect{
+			X: 0,
+			Y: 0,
+			W: width,
+			H: height,
+		},
+		canRender: true,
+	}
+}
+
+func NewTextWithCustomFont(renderer *sdl.Renderer, customFont string, text string) Text {
+	var err error
+	var surfaceText *sdl.Surface
+	var renderedText *sdl.Texture
+	var font *ttf.Font
+
+	if font, err = ttf.OpenFont(customFont, 16); err != nil {
 		panic(err)
 	}
 
@@ -72,12 +124,12 @@ func (this *Text) ChangeText(renderer *sdl.Renderer, newText string) {
 }
 
 func (this *Text) Destroy() {
-	if this.renderedText != nil {
-		this.renderedText.Destroy()
-	}
-
 	if this.font != nil {
 		this.font.Close()
+	}
+
+	if this.renderedText != nil {
+		this.renderedText.Destroy()
 	}
 }
 
