@@ -144,6 +144,11 @@ func (this *Text) SetPosition(x, y int32) {
 	this.rect.Y = y
 }
 
+func (this *Text) CenterOn(x, y int32) {
+	this.rect.X = x - this.rect.W/2
+	this.rect.Y = y - this.rect.H/2
+}
+
 func (this *Text) Hide() {
 	this.canRender = false
 }
