@@ -100,12 +100,12 @@ func NewTextWithCustomFont(renderer *sdl.Renderer, customFont string, text strin
 	}
 }
 
-func (this *Text) ChangeText(renderer *sdl.Renderer, newText string) {
+func (t *Text) ChangeText(renderer *sdl.Renderer, newText string) {
 	var err error
 	var surfaceText *sdl.Surface
 	var renderedText *sdl.Texture
 
-	if surfaceText, err = this.font.RenderUTF8Blended(newText, sdl.Color{R: 255, G: 255, B: 255, A: 255}); err != nil {
+	if surfaceText, err = t.font.RenderUTF8Blended(newText, sdl.Color{R: 255, G: 255, B: 255, A: 255}); err != nil {
 		panic(err)
 	}
 	defer surfaceText.Free()
@@ -116,51 +116,51 @@ func (this *Text) ChangeText(renderer *sdl.Renderer, newText string) {
 
 	_, _, width, height, err := renderedText.Query()
 
-	this.text = newText
-	this.renderedText.Destroy()
-	this.renderedText = renderedText
-	this.rect.W = width
-	this.rect.H = height
+	t.text = newText
+	t.renderedText.Destroy()
+	t.renderedText = renderedText
+	t.rect.W = width
+	t.rect.H = height
 }
 
-func (this *Text) Destroy() {
-	if this.font != nil {
-		this.font.Close()
+func (t *Text) Destroy() {
+	if t.font != nil {
+		t.font.Close()
 	}
 
-	if this.renderedText != nil {
-		this.renderedText.Destroy()
-	}
-}
-
-func (this *Text) Render(renderer *sdl.Renderer) {
-	if this.renderedText != nil {
-		renderer.Copy(this.renderedText, nil, &this.rect)
+	if t.renderedText != nil {
+		t.renderedText.Destroy()
 	}
 }
 
-func (this *Text) SetPosition(x, y int32) {
-	this.rect.X = x
-	this.rect.Y = y
+func (t *Text) Render(renderer *sdl.Renderer) {
+	if t.renderedText != nil {
+		renderer.Copy(t.renderedText, nil, &t.rect)
+	}
 }
 
-func (this *Text) CenterOn(x, y int32) {
-	this.rect.X = x - this.rect.W/2
-	this.rect.Y = y - this.rect.H/2
+func (t *Text) SetPosition(x, y int32) {
+	t.rect.X = x
+	t.rect.Y = y
 }
 
-func (this *Text) Hide() {
-	this.canRender = false
+func (t *Text) CenterOn(x, y int32) {
+	t.rect.X = x - t.rect.W/2
+	t.rect.Y = y - t.rect.H/2
 }
 
-func (this *Text) Show() {
-	this.canRender = true
+func (t *Text) Hide() {
+	t.canRender = false
 }
 
-func (this *Text) ToggleVisibility() {
-	this.canRender = !this.canRender
+func (t *Text) Show() {
+	t.canRender = true
 }
 
-func (this *Text) GetDimensions() (width, height int32) {
-	return this.rect.W, this.rect.H
+func (t *Text) ToggleVisibility() {
+	t.canRender = !t.canRender
+}
+
+func (t *Text) GetDimensions() (width, height int32) {
+	return t.rect.W, t.rect.H
 }
