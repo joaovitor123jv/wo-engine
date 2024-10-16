@@ -2,6 +2,7 @@ package woutils
 
 import (
 	"embed"
+	"log"
 
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
@@ -11,6 +12,7 @@ type Text struct {
 	text         string
 	renderedText *sdl.Texture
 	font         *ttf.Font
+	rwops        *sdl.RWops // rwops is used to keep the font data open (when using in-memory fonts)
 	rect         sdl.Rect
 	canRender    bool
 }
@@ -33,7 +35,7 @@ func NewText(renderer *sdl.Renderer, text string) Text {
 	if err != nil {
 		panic(err)
 	}
-	defer rwops.Close()
+	// DO NOT defer rwops.Close() because it will close the font data and cause a panic when rendering text
 
 	font, err = ttf.OpenFontRW(rwops, 0, 16)
 	if err != nil {
@@ -55,6 +57,7 @@ func NewText(renderer *sdl.Renderer, text string) Text {
 		text:         text,
 		renderedText: renderedText,
 		font:         font,
+		rwops:        rwops,
 		rect: sdl.Rect{
 			X: 0,
 			Y: 0,
@@ -90,6 +93,7 @@ func NewTextWithCustomFont(renderer *sdl.Renderer, customFont string, text strin
 		text:         text,
 		renderedText: renderedText,
 		font:         font,
+		rwops:        nil, // rwops is nil because we are using a file font
 		rect: sdl.Rect{
 			X: 0,
 			Y: 0,
@@ -105,25 +109,44 @@ func (t *Text) ChangeText(renderer *sdl.Renderer, newText string) {
 	var surfaceText *sdl.Surface
 	var renderedText *sdl.Texture
 
+	if t.font == nil {
+		log.Fatal("Font is nil")
+	}
+
 	if surfaceText, err = t.font.RenderUTF8Blended(newText, sdl.Color{R: 255, G: 255, B: 255, A: 255}); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer surfaceText.Free()
 
 	if renderedText, err = renderer.CreateTextureFromSurface(surfaceText); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	_, _, width, height, err := renderedText.Query()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	t.text = newText
-	t.renderedText.Destroy()
-	t.renderedText = renderedText
-	t.rect.W = width
-	t.rect.H = height
+
+	if t.renderedText != nil {
+		aux := t.renderedText
+		t.renderedText = renderedText
+		t.rect.W = width
+		t.rect.H = height
+		aux.Destroy()
+	} else {
+		t.renderedText = renderedText
+		t.rect.W = width
+		t.rect.H = height
+	}
 }
 
 func (t *Text) Destroy() {
+	if t.rwops != nil {
+		t.rwops.Close()
+	}
+
 	if t.font != nil {
 		t.font.Close()
 	}

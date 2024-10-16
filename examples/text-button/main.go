@@ -14,28 +14,45 @@ func gameLogic() {
 	gameContext.Start() // The start method creates the window and renderer, you can also set the window size before calling it
 	renderer := gameContext.GetRenderer()
 
-	button := woutils.NewButtonWithText(renderer, "Press me")
-	defer button.Destroy()
+	toggleIsOn := true
+	toggleButton := woutils.NewButtonWithText(renderer, "Click Me (on)")
+	defer toggleButton.Destroy()
 
-	button2 := woutils.NewButtonWithText(renderer, "Exit")
-	defer button2.Destroy()
+	pressMeButton := woutils.NewButtonWithText(renderer, "Press me")
+	defer pressMeButton.Destroy()
 
-	button.OnClick(func() {
+	exitButton := woutils.NewButtonWithText(renderer, "Exit")
+	defer exitButton.Destroy()
+
+	pressMeButton.OnClick(func() {
 		log.Println("Button Pressed")
 	})
 
-	button2.OnClick(func() {
-		log.Println("Button2 Pressed")
+	exitButton.OnClick(func() {
+		log.Println("exitButton Pressed")
 		gameContext.StopExecution()
 	})
 
-	button2.SetPosition(30, 90)
+	toggleButton.OnClick(func() {
+		if toggleIsOn {
+			toggleButton.SetText(renderer, "Click Me (Off)")
+			toggleIsOn = false
+		} else {
+			toggleButton.SetText(renderer, "Click Me (On)")
+			toggleIsOn = true
+		}
+	})
 
-	button2.AddListeners(&gameContext)
-	button.AddListeners(&gameContext)
+	exitButton.SetPosition(30, 90)
+	toggleButton.CenterOn(300, 300)
 
-	gameContext.AddRenderable(&button)
-	gameContext.AddRenderable(&button2)
+	exitButton.AddListeners(&gameContext)
+	pressMeButton.AddListeners(&gameContext)
+	toggleButton.AddListeners(&gameContext)
+
+	gameContext.AddRenderable(&pressMeButton)
+	gameContext.AddRenderable(&exitButton)
+	gameContext.AddRenderable(&toggleButton)
 
 	gameContext.MainLoop()
 }

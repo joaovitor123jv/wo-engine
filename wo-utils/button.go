@@ -29,36 +29,39 @@ const (
 var buttonImages embed.FS
 
 type Button struct {
-	text            *Text
-	destRect        Rect
-	idleTexture     *sdl.Texture
-	pressedTexture  *sdl.Texture
-	hoverTexture    *sdl.Texture
-	disabledTexture *sdl.Texture
-	state           ButtonState
-	size            ButtonSize
-	behaviour       ButtonBehavior
-	canRender       bool
-	onClick         func()
+	text               *Text
+	destRect           Rect
+	idleTexture        *sdl.Texture
+	pressedTexture     *sdl.Texture
+	hoverTexture       *sdl.Texture
+	disabledTexture    *sdl.Texture
+	collisionRect      Rect
+	collisionThreshold Rect
+	state              ButtonState
+	size               ButtonSize
+	behaviour          ButtonBehavior
+	canRender          bool
+	canListenEvents    bool
+	onClick            func()
 }
 
 func NewButton() Button {
+	destRect := NewRect(0, 0, 100, 100)
+	collisionThreshold := NewRect(0, 0, 0, 0)
 	return Button{
-		text: nil,
-		destRect: NewRect(
-			0,
-			0,
-			100,
-			100,
-		),
-		idleTexture:     nil,
-		pressedTexture:  nil,
-		hoverTexture:    nil,
-		disabledTexture: nil,
-		state:           Idle,
-		size:            MediumButton,
-		canRender:       true,
-		onClick:         nil,
+		text:               nil,
+		destRect:           destRect,
+		collisionRect:      destRect,
+		collisionThreshold: collisionThreshold,
+		idleTexture:        nil,
+		pressedTexture:     nil,
+		hoverTexture:       nil,
+		disabledTexture:    nil,
+		state:              Idle,
+		size:               MediumButton,
+		canRender:          true,
+		canListenEvents:    true,
+		onClick:            nil,
 	}
 }
 
@@ -73,7 +76,33 @@ func NewButtonWithText(renderer *sdl.Renderer, text string) Button {
 	button.setDefaultDisabled(renderer)
 
 	button.updateDimensions()
+	button.setDefaultCollisionThreshold()
+
 	return button
+}
+
+func (b *Button) setDefaultCollisionThreshold() {
+	b.SetCollisionThreshold(5, 10, 8, 18)
+}
+
+// SetCollisionThreshold sets the collision threshold for the button.
+// The values are collision percentages from the button's dimensions.
+// For example, if the button has a width of 100 and height of 100, and the
+// collision threshold is set to 10, 20, 15, 12, the collision area will be
+// 10% from the left, 20% from the top, 15% from the right and 12% from the bottom.
+func (b *Button) SetCollisionThreshold(xStart, yStart, xEnd, yEnd uint16) {
+	b.collisionThreshold = NewRect(int32(xStart), int32(yStart), int32(xEnd), int32(yEnd))
+
+	b.calcCollisionRect()
+}
+
+func (b *Button) calcCollisionRect() {
+	b.collisionRect = NewRect(
+		b.destRect.X+int32((float32(b.destRect.W)*float32(b.collisionThreshold.X))/100),
+		b.destRect.Y+int32((float32(b.destRect.H)*float32(b.collisionThreshold.Y))/100),
+		b.destRect.W-int32((float32(b.destRect.W)*float32(b.collisionThreshold.X+b.collisionThreshold.W))/100),
+		b.destRect.H-int32((float32(b.destRect.H)*float32(b.collisionThreshold.Y+b.collisionThreshold.H))/100),
+	)
 }
 
 func (b *Button) updateDimensions() {
@@ -83,6 +112,7 @@ func (b *Button) updateDimensions() {
 		b.destRect.H = height + 40
 		b.text.SetPosition(b.destRect.X+15, b.destRect.Y+15)
 	}
+	b.calcCollisionRect()
 }
 
 func (b *Button) Render(renderer *sdl.Renderer) {
@@ -120,12 +150,24 @@ func (b *Button) ToggleVisibility() {
 	b.canRender = !b.canRender
 }
 
+func (b *Button) DisableEvents() {
+	b.canListenEvents = false
+}
+
+func (b *Button) EnableEvents() {
+	b.canListenEvents = true
+}
+
 func (b *Button) MouseMovementListener(x, y int32) bool {
+	if !b.canListenEvents || !b.canRender {
+		return false
+	}
+
 	if b.state == Pressed {
 		return true
 	}
 
-	if b.destRect.IsPointInside(x, y) {
+	if b.collisionRect.IsPointInside(x, y) {
 		b.state = Hover
 		return true
 	}
@@ -135,20 +177,24 @@ func (b *Button) MouseMovementListener(x, y int32) bool {
 }
 
 func (b *Button) MouseClickListener(x, y int32, button uint8, isPressed bool) bool {
+	if !b.canListenEvents || !b.canRender {
+		return false
+	}
+
 	if b.state == Disabled {
 		return false
 	}
 
 	if button == sdl.BUTTON_LEFT {
 		if isPressed {
-			if b.destRect.IsPointInside(x, y) {
+			if b.collisionRect.IsPointInside(x, y) {
 				b.state = Pressed
 				return true
 			}
 		}
 
 		if b.state == Pressed && !isPressed {
-			if b.destRect.IsPointInside(x, y) {
+			if b.collisionRect.IsPointInside(x, y) {
 				b.state = Hover
 			} else {
 				b.state = Idle
@@ -175,10 +221,20 @@ func (b *Button) AddListeners(screenContext *GameContext) {
 
 func (b *Button) SetPosition(x, y int32) {
 	b.destRect.SetPosition(x, y)
+	b.calcCollisionRect()
 
 	if b.text != nil {
 		b.text.SetPosition(x+15, y+15)
 	}
+}
+
+func (b *Button) CenterOn(x, y int32) {
+	b.SetPosition(x-b.collisionRect.W/2, y-b.collisionRect.H/2)
+}
+
+func (b *Button) SetText(renderer *sdl.Renderer, text string) {
+	b.text.ChangeText(renderer, text)
+	b.updateDimensions()
 }
 
 func getTextureFromEmbedFs(renderer *sdl.Renderer, path string) *sdl.Texture {

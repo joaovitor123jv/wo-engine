@@ -2,6 +2,7 @@ package woutils
 
 import (
 	"log"
+	"slices"
 
 	wointerfaces "github.com/joaovitor123jv/wo-engine/wo-interfaces"
 	"github.com/veandco/go-sdl2/sdl"
@@ -75,6 +76,11 @@ func (gc *GameContext) AddMouseClickListener(listener func(x, y int32, button ui
 	gc.mouseClickListeners = append(gc.mouseClickListeners, listener)
 }
 
+// The events are handled in the main loop in the "backward" order, to
+// match the order in which they were added
+//
+// This is important because the last added listener should have the priority
+// to handle the event (e.g. a button click over another button)
 func (gc *GameContext) HandleEvent(event *sdl.Event) bool {
 	keepRunning := true
 
@@ -87,13 +93,13 @@ func (gc *GameContext) HandleEvent(event *sdl.Event) bool {
 			keepRunning = false
 		}
 	case *sdl.MouseMotionEvent:
-		for _, listener := range gc.mouseMovementListeners {
+		for _, listener := range slices.Backward(gc.mouseMovementListeners) {
 			if listener(t.X, t.Y) {
 				return keepRunning
 			}
 		}
 	case *sdl.MouseButtonEvent:
-		for _, listener := range gc.mouseClickListeners {
+		for _, listener := range slices.Backward(gc.mouseClickListeners) {
 			// Listener returns true to stop iteration
 			if listener(t.X, t.Y, t.Button, t.State == sdl.PRESSED) {
 				return keepRunning
