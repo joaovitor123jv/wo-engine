@@ -13,12 +13,16 @@ func NewRect(x, y, w, h int32) Rect {
 	}
 }
 
-func (this *Rect) AsSdlRect() *sdl.Rect {
-	return (*sdl.Rect)(this)
+func (r *Rect) AsSdlRect() *sdl.Rect {
+	return (*sdl.Rect)(r)
 }
 
-func (this *Rect) IsPointInside(x, y int32) bool {
-	return (x >= this.X) && (x <= this.X+this.W) && (y >= this.Y) && (y <= this.Y+this.H)
+func (r *Rect) IsPointInside(x, y int32) bool {
+	return (x >= r.X) && (x <= r.X+r.W) && (y >= r.Y) && (y <= r.Y+r.H)
+}
+
+func (r *Rect) Contains(x, y int32) bool {
+	return r.IsPointInside(x, y)
 }
 
 func (this *Rect) SetPosition(x, y int32) {

@@ -33,7 +33,8 @@ func gameLogic() {
 }
 
 func main() {
-	// You don't need to destroy the Game, I know this is sad, so the memory is freed automatically after game.Run()
+	// You don't need to destroy the Game, I know this is sad, so most of the memory is freed automatically
+	// when game.Run() returns
 	game := woengine.NewGame()
 	game.SetEntrypoint(gameLogic)
 	game.Run()

@@ -103,3 +103,8 @@ func (i *Image) FollowCursor(x, y int32) bool {
 	i.destRect.Y = y
 	return false
 }
+
+func (i *Image) Contains(x, y int32) bool {
+	r := Rect(i.destRect)
+	return r.Contains(x, y)
+}
