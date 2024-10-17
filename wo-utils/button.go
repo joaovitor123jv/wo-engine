@@ -159,7 +159,7 @@ func (b *Button) EnableEvents() {
 }
 
 func (b *Button) MouseMovementListener(x, y int32) bool {
-	if !b.canListenEvents || !b.canRender {
+	if !b.canListenEvents || !b.canRender || b.state == Disabled {
 		return false
 	}
 
@@ -177,11 +177,7 @@ func (b *Button) MouseMovementListener(x, y int32) bool {
 }
 
 func (b *Button) MouseClickListener(x, y int32, button uint8, isPressed bool) bool {
-	if !b.canListenEvents || !b.canRender {
-		return false
-	}
-
-	if b.state == Disabled {
+	if !b.canListenEvents || !b.canRender || b.state == Disabled {
 		return false
 	}
 
