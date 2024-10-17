@@ -297,6 +297,10 @@ func (b *Button) Disable() {
 	b.state = Disabled
 }
 
+func (b *Button) Enable() {
+	b.state = Idle
+}
+
 func (b *Button) Destroy() {
 	if b.idleTexture != nil {
 		b.idleTexture.Destroy()
