@@ -24,7 +24,7 @@ func gameLogic() {
 
 	centerX, centerY := gameContext.GetWindowCenter()
 	image2.SetSize(150, 190)
-	image2.CentralizeOn(centerX, centerY)
+	image2.CenterOn(centerX, centerY)
 
 	gameContext.AddRenderable(&image)
 	gameContext.AddRenderable(&image2)

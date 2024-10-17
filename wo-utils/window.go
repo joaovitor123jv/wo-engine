@@ -18,14 +18,16 @@ func NewWindow(title string, width int32, height int32) *Window {
 	}
 
 	window.SetMinimumSize(800, 600)
-	window.SetResizable(true)
+	window.SetResizable(false)
 
 	return &Window{window}
 }
 
-func (w *Window) GetCenter() (int32, int32) {
+func (w *Window) GetCenter() (x, y int32) {
 	width, height := w.Window.GetSize()
-	return width / 2, height / 2
+	x = width / 2
+	y = height / 2
+	return x, y
 }
 
 func (w *Window) AsSDLWindow() *sdl.Window {

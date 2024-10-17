@@ -18,6 +18,8 @@ type GameContext struct {
 	window                 *Window
 	renderer               *sdl.Renderer
 	shouldExit             bool
+	targetFramerate        uint32
+	lastFrameTime          uint64
 }
 
 func NewContext(gameName string) GameContext {
@@ -31,6 +33,8 @@ func NewContext(gameName string) GameContext {
 		window:                 nil,
 		renderer:               nil,
 		shouldExit:             false,
+		targetFramerate:        30,
+		lastFrameTime:          0,
 	}
 }
 
@@ -43,8 +47,21 @@ func (gc *GameContext) Start() {
 	}
 }
 
+func (gc *GameContext) GetTargetFramerate() uint32 {
+	return gc.targetFramerate
+}
+
+func (gc *GameContext) SetTargetFramerate(framesPerSecond uint32) {
+	if framesPerSecond == 0 {
+		log.Fatalf("Invalid target framerate: %d. Should be greater than 0", framesPerSecond)
+	}
+
+	gc.targetFramerate = framesPerSecond
+}
+
 func (gc *GameContext) GetWindowSize() (int32, int32) {
-	return gc.windowWidth, gc.windowHeight
+	width, height := gc.window.GetSize()
+	return width, height
 }
 
 func (gc *GameContext) GetWindowCenter() (int32, int32) {
@@ -59,6 +76,8 @@ func (gc *GameContext) StopExecution() {
 	gc.shouldExit = true
 }
 
+// Set the window size and update the window size if the window is already created
+// The struct variables are needed to keep the desired size if the window is not created yet
 func (gc *GameContext) SetWindowSize(width, height int32) {
 	gc.windowWidth = width
 	gc.windowHeight = height
@@ -146,6 +165,14 @@ func (gc *GameContext) Destroy() {
 	}
 }
 
+func (gc *GameContext) runDelay() {
+	if gc.lastFrameTime == 0 {
+		return
+	}
+
+	sdl.Delay((1000 / gc.targetFramerate) - uint32(sdl.GetTicks64()-gc.lastFrameTime))
+}
+
 func (gc *GameContext) MainLoop() {
 	running := true
 
@@ -157,6 +184,22 @@ func (gc *GameContext) MainLoop() {
 
 		gc.Render()
 
-		sdl.Delay(16)
+		gc.runDelay()
 	}
+}
+
+func (gc *GameContext) EnterFullScreen() {
+	if gc.window == nil {
+		log.Fatalf("Cannot enter fullscreen mode without a window")
+	}
+
+	gc.window.SetFullscreen(sdl.WINDOW_FULLSCREEN)
+}
+
+func (gc *GameContext) ExitFullScreen() {
+	if gc.window == nil {
+		log.Fatalf("Cannot enter fullscreen mode without a window")
+	}
+
+	gc.window.SetFullscreen(0)
 }

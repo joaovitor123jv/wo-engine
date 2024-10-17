@@ -104,7 +104,7 @@ func NewTextWithCustomFont(renderer *sdl.Renderer, customFont string, text strin
 	}
 }
 
-func (t *Text) ChangeText(renderer *sdl.Renderer, newText string) {
+func (t *Text) SetText(renderer *sdl.Renderer, newText string) {
 	var err error
 	var surfaceText *sdl.Surface
 	var renderedText *sdl.Texture
@@ -165,6 +165,12 @@ func (t *Text) Render(renderer *sdl.Renderer) {
 func (t *Text) SetPosition(x, y int32) {
 	t.rect.X = x
 	t.rect.Y = y
+}
+
+func (t *Text) GetCenter() (x, y int32) {
+	x = t.rect.X + t.rect.W/2
+	y = t.rect.Y + t.rect.H/2
+	return x, y
 }
 
 func (t *Text) CenterOn(x, y int32) {

@@ -22,8 +22,8 @@ func NewSettings(renderer *sdl.Renderer, backgroundPath string) Settings {
 	// Viewport Center X and Y
 	vpcX, vpcY := viewport.W/2, viewport.H/2
 
-	background.SetSize(vpcX, vpcY)      // Set the image size to half of the viewport size
-	background.CentralizeOn(vpcX, vpcY) // Centralize the image on the viewport
+	background.SetSize(vpcX, vpcY)  // Set the image size to half of the viewport size
+	background.CenterOn(vpcX, vpcY) // Centralize the image on the viewport
 	background.SetSrcRect(2000, 350, 1750, 1200)
 
 	closeButton.CenterOn(vpcX, vpcY+(2*(vpcY/5)))   // Positions the button near the bottom of the background

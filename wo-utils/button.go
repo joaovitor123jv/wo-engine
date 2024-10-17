@@ -167,7 +167,7 @@ func (b *Button) MouseMovementListener(x, y int32) bool {
 		return true
 	}
 
-	if b.collisionRect.IsPointInside(x, y) {
+	if b.collisionRect.Contains(x, y) {
 		b.state = Hover
 		return true
 	}
@@ -187,14 +187,14 @@ func (b *Button) MouseClickListener(x, y int32, button uint8, isPressed bool) bo
 
 	if button == sdl.BUTTON_LEFT {
 		if isPressed {
-			if b.collisionRect.IsPointInside(x, y) {
+			if b.collisionRect.Contains(x, y) {
 				b.state = Pressed
 				return true
 			}
 		}
 
 		if b.state == Pressed && !isPressed {
-			if b.collisionRect.IsPointInside(x, y) {
+			if b.collisionRect.Contains(x, y) {
 				b.state = Hover
 			} else {
 				b.state = Idle
@@ -228,12 +228,18 @@ func (b *Button) SetPosition(x, y int32) {
 	}
 }
 
+func (b *Button) GetCenter() (x, y int32) {
+	x = b.destRect.X + b.destRect.W/2
+	y = b.destRect.Y + b.destRect.H/2
+	return x, y
+}
+
 func (b *Button) CenterOn(x, y int32) {
 	b.SetPosition(x-b.collisionRect.W/2, y-b.collisionRect.H/2)
 }
 
 func (b *Button) SetText(renderer *sdl.Renderer, text string) {
-	b.text.ChangeText(renderer, text)
+	b.text.SetText(renderer, text)
 	b.updateDimensions()
 }
 

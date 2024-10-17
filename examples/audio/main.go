@@ -53,13 +53,13 @@ func gameLogic() {
 	context.AddRenderable(&selectedMusicLabel)
 
 	selectAudioAButton.OnClick(func() {
-		selectedMusicLabel.ChangeText(renderer, "Selected Audio A")
+		selectedMusicLabel.SetText(renderer, "Selected Audio A")
 
 		selectedAudio = &audioA
 	})
 
 	selectAudioBButton.OnClick(func() {
-		selectedMusicLabel.ChangeText(renderer, "Selected Audio B")
+		selectedMusicLabel.SetText(renderer, "Selected Audio B")
 
 		selectedAudio = &audioB
 	})

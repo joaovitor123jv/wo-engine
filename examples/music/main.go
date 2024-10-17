@@ -48,7 +48,7 @@ func gameLogic() {
 	context.AddRenderable(&selectedMusicLabel)
 
 	selectMusicAButton.OnClick(func() {
-		selectedMusicLabel.ChangeText(renderer, "Selected Music A")
+		selectedMusicLabel.SetText(renderer, "Selected Music A")
 
 		if music.Loaded() {
 			music.Destroy()
@@ -58,7 +58,7 @@ func gameLogic() {
 	})
 
 	selectMusicBButton.OnClick(func() {
-		selectedMusicLabel.ChangeText(renderer, "Selected Music B")
+		selectedMusicLabel.SetText(renderer, "Selected Music B")
 
 		if music.Loaded() {
 			music.Destroy()

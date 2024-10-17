@@ -48,7 +48,13 @@ func (i *Image) FillArea(x, y, width, height int32) {
 	i.destRect.H = height
 }
 
-func (i *Image) CentralizeOn(x, y int32) {
+func (i *Image) GetCenter() (x, y int32) {
+	x = i.destRect.X + i.destRect.W/2
+	y = i.destRect.Y + i.destRect.H/2
+	return x, y
+}
+
+func (i *Image) CenterOn(x, y int32) {
 	i.destRect.X = x - i.destRect.W/2
 	i.destRect.Y = y - i.destRect.H/2
 }
