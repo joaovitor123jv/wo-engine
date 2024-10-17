@@ -203,3 +203,27 @@ func (gc *GameContext) ExitFullScreen() {
 
 	gc.window.SetFullscreen(0)
 }
+
+func (gc *GameContext) getWindowDisplayIndex() int {
+	if gc.window == nil {
+		log.Fatalf("Cannot get display index without a window")
+	}
+
+	if index, err := gc.window.GetDisplayIndex(); err != nil {
+		log.Fatalf("Failed to get display index: %s", err)
+		return -1
+	} else {
+		return index
+	}
+}
+
+func (gc *GameContext) GetTotalDisplaySize() (width, height int32) {
+	displayIndex := gc.getWindowDisplayIndex()
+
+	rect, err := sdl.GetDisplayBounds(displayIndex)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return rect.W, rect.H
+}
