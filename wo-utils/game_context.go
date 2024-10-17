@@ -184,6 +184,7 @@ func (gc *GameContext) MainLoop() {
 
 		gc.Render()
 
+		gc.lastFrameTime = sdl.GetTicks64()
 		gc.runDelay()
 	}
 }
