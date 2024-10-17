@@ -3,4 +3,7 @@ package woutils
 const (
 	INIT_SCREEN_WINDOW_WIDTH  int32 = 800
 	INIT_SCREEN_WINDOW_HEIGHT int32 = 600
+
+	UI_AUDIO_CHANNEL     int = 0
+	PLAYER_AUDIO_CHANNEL int = 1
 )
