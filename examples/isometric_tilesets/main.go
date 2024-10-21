@@ -26,7 +26,7 @@ func gameLogic() {
 	isApplyingZoom := false
 	zoomSourceY := int32(0)
 	isMovingMap := false
-	defaultZoom := int32(100)
+	defaultZoom := float32(1)
 	movementSourceX, movementSourceY := int32(0), int32(0)
 
 	// Get the current renderer from the context
@@ -54,13 +54,12 @@ func gameLogic() {
 				isApplyingZoom = true // Start applying zoom
 				zoomSourceY = y       // Store the initial zoom position
 			} else {
-				fmt.Println("Mouse released at: ", x, y)
 				isApplyingZoom = false // Stop applying zoom
 			}
 			return true
 		} else if button == sdl.BUTTON_MIDDLE { // Check for middle mouse button click
-			defaultZoom = 100    // Reset zoom to default value
-			gameMap.SetZoom(100) // Apply the default zoom to the game map
+			defaultZoom = 1.0            // Reset zoom to default value
+			gameMap.SetZoom(defaultZoom) // Apply the default zoom to the game map
 		}
 		return false
 	})
@@ -73,8 +72,8 @@ func gameLogic() {
 			return true
 		}
 		if isApplyingZoom { // If zoom is being applied
-			defaultZoom += (zoomSourceY - y) / 100 // Adjust zoom based on mouse movement
-			gameMap.SetZoom(int32(defaultZoom))    // Apply the calculated zoom level to the game map
+			defaultZoom += 0.01 * float32(zoomSourceY-y) // Adjust zoom based on mouse movement
+			gameMap.SetZoom(defaultZoom)                 // Apply the calculated zoom level to the game map
 			fmt.Println("Current zoom: ", defaultZoom)
 		}
 		return false

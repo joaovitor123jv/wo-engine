@@ -30,7 +30,7 @@ type GameMap struct {
 	tileSets     map[int]*GameMapTileSet // Maps tileset firstgid to tileset
 	translationX int32
 	translationY int32
-	zoom         int32
+	zoom         float32
 }
 
 func NewGameMap(renderer *sdl.Renderer, mapName string, tmxFilePath string) GameMap {
@@ -75,7 +75,7 @@ func NewGameMap(renderer *sdl.Renderer, mapName string, tmxFilePath string) Game
 		tileSets:     tileSets,
 		translationX: 0,
 		translationY: 0,
-		zoom:         100,
+		zoom:         1,
 	}
 }
 
@@ -107,21 +107,28 @@ func (gm *GameMap) Translate(x, y int32) {
 	gm.translationY += y
 }
 
-// zoom = 100 is the default (100%)
-// The lesser the value, the smaller the things
-func (gm *GameMap) SetZoom(zoom int32) {
-	if gm.zoom <= 1 {
-		gm.zoom = 2
-		log.Println("Cannot allow zoom of 0 or less")
+// SetZoom alters the zoom in wich the map is rendered.
+// 1 is the default zoom (100%).
+// Param "zoom" must be between 0.1 and 10.0
+func (gm *GameMap) SetZoom(zoom float32) {
+	if zoom <= 0.1 || zoom > 10.0 {
+		log.Println("Zoom must be between 0.1 (10%) and 10.0 (10x)")
 		return
 	}
 	gm.zoom = zoom
 }
 
+func rectsOverlap(a, b *sdl.Rect) bool {
+	return a.X+a.W > b.X && a.X < b.X+b.W && a.Y+a.H > b.Y && a.Y < b.Y+b.H
+}
+
 func (gm *GameMap) Render(renderer *sdl.Renderer) {
 	var currentTileset *GameMapTileSet
 
-	offsetX, offsetY := int32(gm.tileWidth), int32(gm.tileHeight)
+	prevScaleX, prevScaleY := renderer.GetScale()
+	renderer.SetScale(gm.zoom, gm.zoom)
+
+	offsetX, offsetY := gm.tileWidth, gm.tileHeight
 	viewport := renderer.GetViewport()
 	viewport.X = viewport.X - offsetX
 	viewport.Y = viewport.Y - offsetY
@@ -143,21 +150,25 @@ func (gm *GameMap) Render(renderer *sdl.Renderer) {
 				}
 			}
 
+			if currentTileset == nil {
+				log.Fatalln("Couldn't find tileset. Are the tilemaps and tilesets properly configured?")
+			}
+
 			x := int32(i) % gm.mapWidth * gm.tileWidth
 			y := int32(i) / gm.mapWidth * gm.tileHeight
 
 			x, y = CartesianToIsometric(x, y)
-			x, y = x+gm.translationX, y+gm.translationY
-			x, y = x*gm.zoom/100, y*gm.zoom/100
+			x += gm.translationX
+			y += gm.translationY
 
 			tileRect := &sdl.Rect{
 				X: x,
 				Y: y,
-				W: gm.tileWidth * gm.zoom / 100,
-				H: gm.tileHeight * gm.zoom / 100,
+				W: gm.tileWidth,
+				H: gm.tileHeight,
 			}
 
-			if tileRect.X < viewport.X || tileRect.X > viewport.X+viewport.W || tileRect.Y < viewport.Y || tileRect.Y > viewport.Y+viewport.H {
+			if !rectsOverlap(tileRect, &viewport) {
 				continue
 			}
 
@@ -165,13 +176,14 @@ func (gm *GameMap) Render(renderer *sdl.Renderer) {
 			tileSetTileColumn := (tileID - currentTileset.minTileId) % currentTileset.columns
 
 			tileSetRect := &sdl.Rect{
-				X: tileSetTileColumn * gm.tileWidth,
-				Y: tileSetTileRow * gm.tileHeight,
-				W: gm.tileWidth,
-				H: gm.tileHeight,
+				X: tileSetTileColumn * currentTileset.tileWidth,
+				Y: tileSetTileRow * currentTileset.tileHeight,
+				W: currentTileset.tileWidth,
+				H: currentTileset.tileHeight,
 			}
 
 			renderer.Copy(currentTileset.texture, tileSetRect, tileRect)
 		}
 	}
+	renderer.SetScale(prevScaleX, prevScaleY)
 }
