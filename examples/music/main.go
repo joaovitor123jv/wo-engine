@@ -11,24 +11,22 @@ func gameLogic() {
 
 	context.Start()
 
-	renderer := context.GetRenderer()
-
 	var music woutils.Music
 	defer music.Destroy()
 
-	playButton := woutils.NewButtonWithText(renderer, "Play")
+	playButton := woutils.NewButtonWithText(&context, "Play")
 	defer playButton.Destroy()
 
-	stopButton := woutils.NewButtonWithText(renderer, "Stop")
+	stopButton := woutils.NewButtonWithText(&context, "Stop")
 	defer stopButton.Destroy()
 
-	selectMusicAButton := woutils.NewButtonWithText(renderer, "Select Music A")
+	selectMusicAButton := woutils.NewButtonWithText(&context, "Select Music A")
 	defer selectMusicAButton.Destroy()
 
-	selectMusicBButton := woutils.NewButtonWithText(renderer, "Select Music B")
+	selectMusicBButton := woutils.NewButtonWithText(&context, "Select Music B")
 	defer selectMusicBButton.Destroy()
 
-	selectedMusicLabel := woutils.NewText(renderer, "Selected Music: None")
+	selectedMusicLabel := woutils.NewText(&context, "Selected Music: None")
 	defer selectedMusicLabel.Destroy()
 
 	centerX, centerY := context.GetWindowCenter()
@@ -48,7 +46,7 @@ func gameLogic() {
 	context.AddRenderable(&selectedMusicLabel)
 
 	selectMusicAButton.OnClick(func() {
-		selectedMusicLabel.SetText(renderer, "Selected Music A")
+		selectedMusicLabel.SetText(&context, "Selected Music A")
 
 		if music.Loaded() {
 			music.Destroy()
@@ -58,7 +56,7 @@ func gameLogic() {
 	})
 
 	selectMusicBButton.OnClick(func() {
-		selectedMusicLabel.SetText(renderer, "Selected Music B")
+		selectedMusicLabel.SetText(&context, "Selected Music B")
 
 		if music.Loaded() {
 			music.Destroy()

@@ -15,8 +15,8 @@ type Image struct {
 	canRender     bool
 }
 
-func NewImage(renderer *sdl.Renderer, imagePath string) Image {
-	texture, err := LoadTexture(renderer, imagePath)
+func NewImage(context *GameContext, imagePath string) Image {
+	texture, err := LoadTexture(context.GetRenderer(), imagePath)
 	if err != nil {
 		log.Fatalf("Failed to load image (%s) and convert to texture: %s", imagePath, err)
 	}
@@ -80,15 +80,15 @@ func (i *Image) Destroy() {
 	}
 }
 
-func (i *Image) Render(renderer *sdl.Renderer) {
+func (i *Image) Render(context *GameContext) {
 	if !i.canRender {
 		return
 	}
 
 	if i.customSrcRect {
-		renderer.Copy(i.texture, &i.srcRect, &i.destRect)
+		context.GetRenderer().Copy(i.texture, &i.srcRect, &i.destRect)
 	} else {
-		renderer.Copy(i.texture, nil, &i.destRect)
+		context.GetRenderer().Copy(i.texture, nil, &i.destRect)
 	}
 }
 

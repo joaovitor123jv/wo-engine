@@ -65,15 +65,15 @@ func NewButton() Button {
 	}
 }
 
-func NewButtonWithText(renderer *sdl.Renderer, text string) Button {
+func NewButtonWithText(context *GameContext, text string) Button {
 	button := NewButton()
-	uiText := NewText(renderer, text)
+	uiText := NewText(context, text)
 	button.text = &uiText
 
-	button.setDefaultIdle(renderer)
-	button.setDefaultHover(renderer)
-	button.setDefaultPressed(renderer)
-	button.setDefaultDisabled(renderer)
+	button.setDefaultIdle(context.GetRenderer())
+	button.setDefaultHover(context.GetRenderer())
+	button.setDefaultPressed(context.GetRenderer())
+	button.setDefaultDisabled(context.GetRenderer())
 
 	button.updateDimensions()
 	button.setDefaultCollisionThreshold()
@@ -115,7 +115,7 @@ func (b *Button) updateDimensions() {
 	b.calcCollisionRect()
 }
 
-func (b *Button) Render(renderer *sdl.Renderer) {
+func (b *Button) Render(context *GameContext) {
 	var texture *sdl.Texture = nil
 
 	switch b.state {
@@ -131,10 +131,10 @@ func (b *Button) Render(renderer *sdl.Renderer) {
 		texture = b.disabledTexture
 	}
 
-	renderer.Copy(texture, nil, b.destRect.AsSdlRect())
+	context.GetRenderer().Copy(texture, nil, b.destRect.AsSdlRect())
 
 	if b.text != nil {
-		b.text.Render(renderer)
+		b.text.Render(context)
 	}
 }
 
@@ -234,8 +234,8 @@ func (b *Button) CenterOn(x, y int32) {
 	b.SetPosition(x-b.collisionRect.W/2, y-b.collisionRect.H/2)
 }
 
-func (b *Button) SetText(renderer *sdl.Renderer, text string) {
-	b.text.SetText(renderer, text)
+func (b *Button) SetText(context *GameContext, text string) {
+	b.text.SetText(context, text)
 	b.updateDimensions()
 }
 
@@ -273,20 +273,20 @@ func getTextureFromFile(renderer *sdl.Renderer, path string) *sdl.Texture {
 	return texture
 }
 
-func (b *Button) SetIdle(renderer *sdl.Renderer, path string) {
-	b.idleTexture = getTextureFromFile(renderer, path)
+func (b *Button) SetIdle(context *GameContext, path string) {
+	b.idleTexture = getTextureFromFile(context.GetRenderer(), path)
 }
 
-func (b *Button) SetPressed(renderer *sdl.Renderer, path string) {
-	b.pressedTexture = getTextureFromFile(renderer, path)
+func (b *Button) SetPressed(context *GameContext, path string) {
+	b.pressedTexture = getTextureFromFile(context.GetRenderer(), path)
 }
 
-func (b *Button) SetHover(renderer *sdl.Renderer, path string) {
-	b.hoverTexture = getTextureFromFile(renderer, path)
+func (b *Button) SetHover(context *GameContext, path string) {
+	b.hoverTexture = getTextureFromFile(context.GetRenderer(), path)
 }
 
-func (b *Button) SetDisabled(renderer *sdl.Renderer, path string) {
-	b.disabledTexture = getTextureFromFile(renderer, path)
+func (b *Button) SetDisabled(context *GameContext, path string) {
+	b.disabledTexture = getTextureFromFile(context.GetRenderer(), path)
 }
 
 func (b *Button) Disable() {

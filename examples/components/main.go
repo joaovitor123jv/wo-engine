@@ -11,13 +11,11 @@ func gameLogic() {
 
 	context.Start()
 
-	renderer := context.GetRenderer()
-
-	settings := NewSettings(renderer, "assets/settings-background.png")
+	settings := NewSettings(&context, "assets/settings-background.png")
 	defer settings.Destroy()
 
 	centerX, centerY := context.GetWindowCenter()
-	button := woutils.NewButtonWithText(renderer, "Open Settings")
+	button := woutils.NewButtonWithText(&context, "Open Settings")
 	defer button.Destroy()
 	button.CenterOn(centerX, centerY)
 

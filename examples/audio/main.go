@@ -11,8 +11,6 @@ func gameLogic() {
 
 	context.Start()
 
-	renderer := context.GetRenderer()
-
 	var selectedAudio *woutils.Audio = nil
 
 	audioA := woutils.NewAudio("assets/audio-a.mp3")
@@ -21,19 +19,19 @@ func gameLogic() {
 	audioB := woutils.NewAudio("assets/audio-b.mp3")
 	defer audioB.Destroy()
 
-	playButton := woutils.NewButtonWithText(renderer, "Play")
+	playButton := woutils.NewButtonWithText(&context, "Play")
 	defer playButton.Destroy()
 
-	stopButton := woutils.NewButtonWithText(renderer, "Stop")
+	stopButton := woutils.NewButtonWithText(&context, "Stop")
 	defer stopButton.Destroy()
 
-	selectAudioAButton := woutils.NewButtonWithText(renderer, "Select Audio A")
+	selectAudioAButton := woutils.NewButtonWithText(&context, "Select Audio A")
 	defer selectAudioAButton.Destroy()
 
-	selectAudioBButton := woutils.NewButtonWithText(renderer, "Select Audio B")
+	selectAudioBButton := woutils.NewButtonWithText(&context, "Select Audio B")
 	defer selectAudioBButton.Destroy()
 
-	selectedMusicLabel := woutils.NewText(renderer, "Selected Audio: None")
+	selectedMusicLabel := woutils.NewText(&context, "Selected Audio: None")
 	defer selectedMusicLabel.Destroy()
 
 	centerX, centerY := context.GetWindowCenter()
@@ -53,13 +51,13 @@ func gameLogic() {
 	context.AddRenderable(&selectedMusicLabel)
 
 	selectAudioAButton.OnClick(func() {
-		selectedMusicLabel.SetText(renderer, "Selected Audio A")
+		selectedMusicLabel.SetText(&context, "Selected Audio A")
 
 		selectedAudio = &audioA
 	})
 
 	selectAudioBButton.OnClick(func() {
-		selectedMusicLabel.SetText(renderer, "Selected Audio B")
+		selectedMusicLabel.SetText(&context, "Selected Audio B")
 
 		selectedAudio = &audioB
 	})

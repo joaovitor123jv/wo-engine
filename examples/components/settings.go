@@ -2,7 +2,6 @@ package main
 
 import (
 	woutils "github.com/joaovitor123jv/wo-engine/wo-utils"
-	"github.com/veandco/go-sdl2/sdl"
 )
 
 type Settings struct {
@@ -13,11 +12,11 @@ type Settings struct {
 	canRender     bool
 }
 
-func NewSettings(renderer *sdl.Renderer, backgroundPath string) Settings {
-	background := woutils.NewImage(renderer, backgroundPath)
-	settingsLabel := woutils.NewText(renderer, "Settings")
-	closeButton := woutils.NewButtonWithText(renderer, "Close")
-	viewport := renderer.GetViewport() // Get the rendering viewport
+func NewSettings(context *woutils.GameContext, backgroundPath string) Settings {
+	background := woutils.NewImage(context, backgroundPath)
+	settingsLabel := woutils.NewText(context, "Settings")
+	closeButton := woutils.NewButtonWithText(context, "Close")
+	viewport := context.GetRenderer().GetViewport() // Get the rendering viewport
 
 	// Viewport Center X and Y
 	vpcX, vpcY := viewport.W/2, viewport.H/2
@@ -56,14 +55,14 @@ func (s *Settings) ToggleVisibility() {
 	s.settingsLabel.ToggleVisibility()
 }
 
-func (s *Settings) Render(renderer *sdl.Renderer) {
+func (s *Settings) Render(context *woutils.GameContext) {
 	if !s.canRender {
 		return
 	}
 
-	s.background.Render(renderer)
-	s.settingsLabel.Render(renderer)
-	s.closeButton.Render(renderer)
+	s.background.Render(context)
+	s.settingsLabel.Render(context)
+	s.closeButton.Render(context)
 }
 
 func (s *Settings) AddListeners(gameContext *woutils.GameContext) {

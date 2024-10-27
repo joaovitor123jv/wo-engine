@@ -20,7 +20,7 @@ type Text struct {
 //go:embed assets/fonts/default.ttf
 var fontData embed.FS
 
-func NewText(renderer *sdl.Renderer, text string) Text {
+func NewText(context *GameContext, text string) Text {
 	var err error
 	var surfaceText *sdl.Surface
 	var renderedText *sdl.Texture
@@ -47,7 +47,7 @@ func NewText(renderer *sdl.Renderer, text string) Text {
 	}
 	defer surfaceText.Free()
 
-	if renderedText, err = renderer.CreateTextureFromSurface(surfaceText); err != nil {
+	if renderedText, err = context.GetRenderer().CreateTextureFromSurface(surfaceText); err != nil {
 		panic(err)
 	}
 
@@ -68,7 +68,7 @@ func NewText(renderer *sdl.Renderer, text string) Text {
 	}
 }
 
-func NewTextWithCustomFont(renderer *sdl.Renderer, customFont string, text string) Text {
+func NewTextWithCustomFont(context *GameContext, customFont string, text string) Text {
 	var err error
 	var surfaceText *sdl.Surface
 	var renderedText *sdl.Texture
@@ -83,7 +83,7 @@ func NewTextWithCustomFont(renderer *sdl.Renderer, customFont string, text strin
 	}
 	defer surfaceText.Free()
 
-	if renderedText, err = renderer.CreateTextureFromSurface(surfaceText); err != nil {
+	if renderedText, err = context.GetRenderer().CreateTextureFromSurface(surfaceText); err != nil {
 		panic(err)
 	}
 
@@ -104,7 +104,7 @@ func NewTextWithCustomFont(renderer *sdl.Renderer, customFont string, text strin
 	}
 }
 
-func (t *Text) SetText(renderer *sdl.Renderer, newText string) {
+func (t *Text) SetText(context *GameContext, newText string) {
 	var err error
 	var surfaceText *sdl.Surface
 	var renderedText *sdl.Texture
@@ -118,7 +118,7 @@ func (t *Text) SetText(renderer *sdl.Renderer, newText string) {
 	}
 	defer surfaceText.Free()
 
-	if renderedText, err = renderer.CreateTextureFromSurface(surfaceText); err != nil {
+	if renderedText, err = context.GetRenderer().CreateTextureFromSurface(surfaceText); err != nil {
 		log.Fatal(err)
 	}
 
@@ -156,9 +156,9 @@ func (t *Text) Destroy() {
 	}
 }
 
-func (t *Text) Render(renderer *sdl.Renderer) {
+func (t *Text) Render(context *GameContext) {
 	if t.renderedText != nil {
-		renderer.Copy(t.renderedText, nil, &t.rect)
+		context.GetRenderer().Copy(t.renderedText, nil, &t.rect)
 	}
 }
 

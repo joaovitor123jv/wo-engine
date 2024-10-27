@@ -4,14 +4,17 @@ import (
 	"log"
 	"slices"
 
-	wointerfaces "github.com/joaovitor123jv/wo-engine/wo-interfaces"
 	"github.com/veandco/go-sdl2/sdl"
 )
+
+type Renderable interface {
+	Render(gc *GameContext)
+}
 
 type GameContext struct {
 	mouseMovementListeners []func(x, y int32) bool
 	mouseClickListeners    []func(x, y int32, button uint8, isPressed bool) bool
-	renderQueue            []wointerfaces.Renderable
+	renderQueue            []Renderable
 	windowWidth            int32
 	windowHeight           int32
 	gameName               string
@@ -20,6 +23,7 @@ type GameContext struct {
 	shouldExit             bool
 	targetFramerate        uint32
 	lastFrameTime          uint64
+	Camera                 GameCamera
 }
 
 func NewContext(gameName string) GameContext {
@@ -35,6 +39,7 @@ func NewContext(gameName string) GameContext {
 		shouldExit:             false,
 		targetFramerate:        30,
 		lastFrameTime:          0,
+		Camera:                 NewGameCamera(),
 	}
 }
 
@@ -129,8 +134,22 @@ func (gc *GameContext) HandleEvent(event *sdl.Event) bool {
 	return keepRunning
 }
 
-func (gc *GameContext) AddRenderable(thingToRender wointerfaces.Renderable) {
+func (gc *GameContext) AddRenderable(thingToRender Renderable) {
 	gc.renderQueue = append(gc.renderQueue, thingToRender)
+}
+
+// Initialize the render zoom, scaling the renderer to the zoom value
+// This is useful inside a rendering function, to scale the renderer before rendering
+// other things
+func (gc *GameContext) InitRenderZoom() {
+	gc.renderer.SetScale(gc.Camera.zoom, gc.Camera.zoom)
+}
+
+// Reset the render zoom to the default value (1)
+// This is useful inside a rendering function, after calling InitRenderZoom
+// to reset the zoom to the default value before rendering other things
+func (gc *GameContext) ResetRenderZoom() {
+	gc.renderer.SetScale(1, 1)
 }
 
 func (gc *GameContext) Render() {
@@ -148,7 +167,7 @@ func (gc *GameContext) Render() {
 	}
 
 	for _, renderable := range gc.renderQueue {
-		renderable.Render(gc.renderer)
+		renderable.Render(gc)
 	}
 
 	// Atualiza a janela com o frame atual

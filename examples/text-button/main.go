@@ -12,16 +12,15 @@ func gameLogic() {
 	defer gameContext.Destroy()
 
 	gameContext.Start() // The start method creates the window and renderer, you can also set the window size before calling it
-	renderer := gameContext.GetRenderer()
 
 	toggleIsOn := true
-	toggleButton := woutils.NewButtonWithText(renderer, "Click Me (on)")
+	toggleButton := woutils.NewButtonWithText(&gameContext, "Click Me (on)")
 	defer toggleButton.Destroy()
 
-	pressMeButton := woutils.NewButtonWithText(renderer, "Press me")
+	pressMeButton := woutils.NewButtonWithText(&gameContext, "Press me")
 	defer pressMeButton.Destroy()
 
-	exitButton := woutils.NewButtonWithText(renderer, "Exit")
+	exitButton := woutils.NewButtonWithText(&gameContext, "Exit")
 	defer exitButton.Destroy()
 
 	pressMeButton.OnClick(func() {
@@ -35,10 +34,10 @@ func gameLogic() {
 
 	toggleButton.OnClick(func() {
 		if toggleIsOn {
-			toggleButton.SetText(renderer, "Click Me (Off)")
+			toggleButton.SetText(&gameContext, "Click Me (Off)")
 			toggleIsOn = false
 		} else {
-			toggleButton.SetText(renderer, "Click Me (On)")
+			toggleButton.SetText(&gameContext, "Click Me (On)")
 			toggleIsOn = true
 		}
 	})

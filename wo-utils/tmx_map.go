@@ -48,9 +48,9 @@ type TmxMap struct {
 		Width  int    `xml:"width,attr"`
 		Height int    `xml:"height,attr"`
 		Data   struct {
-			Encoding string `xml:"encoding,attr"`
-			Tiles    []int  `xml:"-"` // Filled with data from the Data.Content after UnmarshalXML
-			Content  string `xml:",chardata"`
+			Encoding string  `xml:"encoding,attr"`
+			Tiles    []int32 `xml:"-"` // Filled with data from the Data.Content after UnmarshalXML
+			Content  string  `xml:",chardata"`
 		} `xml:"data"`
 	} `xml:"layer"`
 }
@@ -98,7 +98,7 @@ func processTiles(tmxMap *TmxMap) error {
 			content := strings.TrimSpace(layer.Data.Content)
 			tileStrings := strings.Split(content, ",")
 
-			tiles := make([]int, 0, len(tileStrings))
+			tiles := make([]int32, 0, len(tileStrings))
 
 			for _, tile := range tileStrings {
 				tile = strings.TrimSpace(tile)
@@ -110,7 +110,7 @@ func processTiles(tmxMap *TmxMap) error {
 				if err != nil {
 					return err
 				}
-				tiles = append(tiles, tileID)
+				tiles = append(tiles, int32(tileID))
 			}
 
 			layer.Data.Tiles = tiles

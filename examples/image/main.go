@@ -11,12 +11,10 @@ func gameLogic() {
 	gameContext.Start()
 	defer gameContext.Destroy()
 
-	renderer := gameContext.GetRenderer()
-
-	image := woutils.NewImage(renderer, "img/img.png")
+	image := woutils.NewImage(&gameContext, "img/img.png")
 	defer image.Destroy()
 
-	image2 := woutils.NewImage(renderer, "img/img.png")
+	image2 := woutils.NewImage(&gameContext, "img/img.png")
 	defer image2.Destroy()
 
 	width, height := gameContext.GetWindowSize()

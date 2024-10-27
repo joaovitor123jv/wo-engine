@@ -21,19 +21,29 @@ type GameMapTileSet struct {
 	tileHeight        int32
 }
 
-type GameMap struct {
-	tileWidth    int32
-	tileHeight   int32
-	mapWidth     int32
-	mapHeight    int32
-	layers       map[int]GameMapLayer
-	tileSets     map[int]*GameMapTileSet // Maps tileset firstgid to tileset
-	translationX int32
-	translationY int32
-	zoom         float32
+func (gmt *GameMapTileSet) getTileRect(tileId int32) sdl.Rect {
+	tileId -= gmt.minTileId
+	column := tileId % gmt.columns
+	row := tileId / gmt.columns
+
+	return sdl.Rect{
+		X: column * gmt.tileWidth,
+		Y: row * gmt.tileHeight,
+		W: gmt.tileWidth,
+		H: gmt.tileHeight,
+	}
 }
 
-func NewGameMap(renderer *sdl.Renderer, mapName string, tmxFilePath string) GameMap {
+type GameMap struct {
+	tileWidth  int32
+	tileHeight int32
+	mapWidth   int32
+	mapHeight  int32
+	layers     map[int]GameMapLayer
+	tileSets   map[int]*GameMapTileSet // Maps tileset firstgid to tileset
+}
+
+func NewGameMap(context *GameContext, mapName string, tmxFilePath string) GameMap {
 	tileMap := NewTiledMap(tmxFilePath)
 
 	tileSets := make(map[int]*GameMapTileSet)
@@ -53,29 +63,27 @@ func NewGameMap(renderer *sdl.Renderer, mapName string, tmxFilePath string) Game
 	for layerIndex := range tileMap.TmxMap.Layers {
 		layer := tileMap.TmxMap.Layers[layerIndex] // Using pointer to update the original struct
 
-		layers[layer.Id] = GameMapLayer{
+		// First layer ID on tile layers is 1. But for the map layersm inside the game logic, it should be 0
+		layers[layer.Id-1] = GameMapLayer{
 			layerName: layer.Name,
-			tiles:     ListIntToListInt32(layer.Data.Tiles),
+			tiles:     layer.Data.Tiles,
 		}
 	}
 
 	for tileSetIndex := range tileSets {
 		tileSet := tileSets[tileSetIndex] // Using pointer to update the original struct
-		if err := loadTextures(renderer, tileSet); err != nil {
+		if err := loadTextures(context.GetRenderer(), tileSet); err != nil {
 			log.Fatalf("Failed to load textures for tileset ID %d, image_source: %s\n", tileSetIndex, tileSet.textureSourcePath)
 		}
 	}
 
 	return GameMap{
-		tileWidth:    int32(tileMap.TmxMap.TileWidth),
-		tileHeight:   int32(tileMap.TmxMap.TileHeight),
-		mapWidth:     int32(tileMap.TmxMap.Width),
-		mapHeight:    int32(tileMap.TmxMap.Height),
-		layers:       layers,
-		tileSets:     tileSets,
-		translationX: 0,
-		translationY: 0,
-		zoom:         1,
+		tileWidth:  int32(tileMap.TmxMap.TileWidth),
+		tileHeight: int32(tileMap.TmxMap.TileHeight),
+		mapWidth:   int32(tileMap.TmxMap.Width),
+		mapHeight:  int32(tileMap.TmxMap.Height),
+		layers:     layers,
+		tileSets:   tileSets,
 	}
 }
 
@@ -102,31 +110,33 @@ func (gm *GameMap) Destroy() {
 	}
 }
 
-func (gm *GameMap) Translate(x, y int32) {
-	gm.translationX += x
-	gm.translationY += y
-}
-
-// SetZoom alters the zoom in wich the map is rendered.
-// 1 is the default zoom (100%).
-// Param "zoom" must be between 0.1 and 10.0
-func (gm *GameMap) SetZoom(zoom float32) {
-	if zoom <= 0.1 || zoom > 10.0 {
-		log.Println("Zoom must be between 0.1 (10%) and 10.0 (10x)")
-		return
-	}
-	gm.zoom = zoom
-}
-
 func rectsOverlap(a, b *sdl.Rect) bool {
 	return a.X+a.W > b.X && a.X < b.X+b.W && a.Y+a.H > b.Y && a.Y < b.Y+b.H
 }
 
-func (gm *GameMap) Render(renderer *sdl.Renderer) {
-	var currentTileset *GameMapTileSet
+func (gm *GameMap) getTilesetFromTileId(tileId int32) *GameMapTileSet {
+	for _, tileSet := range gm.tileSets {
+		if (tileId >= tileSet.minTileId) && (tileId <= tileSet.maxTileId) {
+			return tileSet
+		}
+	}
+	return nil
+}
 
-	prevScaleX, prevScaleY := renderer.GetScale()
-	renderer.SetScale(gm.zoom, gm.zoom)
+func (gm *GameMap) getTileCoordinates(index int) (x, y int32) {
+	x = int32(index) % gm.mapWidth * gm.tileWidth
+	y = int32(index) / gm.mapWidth * gm.tileHeight
+
+	x, y = CartesianToIsometric(x, y)
+	return x, y
+}
+
+func (gm *GameMap) Render(gc *GameContext) {
+	var currentTileset *GameMapTileSet
+	renderer := gc.GetRenderer()
+
+	gc.InitRenderZoom()
+	defer gc.ResetRenderZoom()
 
 	offsetX, offsetY := gm.tileWidth, gm.tileHeight
 	viewport := renderer.GetViewport()
@@ -141,49 +151,24 @@ func (gm *GameMap) Render(renderer *sdl.Renderer) {
 				continue
 			}
 
-			currentTileset = nil
-
-			for _, tileSet := range gm.tileSets {
-				if (tileID >= tileSet.minTileId) && (tileID <= tileSet.maxTileId) {
-					currentTileset = tileSet
-					break
-				}
-			}
-
-			if currentTileset == nil {
+			if currentTileset = gm.getTilesetFromTileId(tileID); currentTileset == nil {
 				log.Fatalln("Couldn't find tileset. Are the tilemaps and tilesets properly configured?")
 			}
 
-			x := int32(i) % gm.mapWidth * gm.tileWidth
-			y := int32(i) / gm.mapWidth * gm.tileHeight
-
-			x, y = CartesianToIsometric(x, y)
-			x += gm.translationX
-			y += gm.translationY
-
-			tileRect := &sdl.Rect{
+			x, y := gm.getTileCoordinates(i)
+			tileRect := sdl.Rect{
 				X: x,
 				Y: y,
 				W: gm.tileWidth,
 				H: gm.tileHeight,
 			}
+			gc.Camera.TranslateSDLRect(&tileRect)
 
-			if !rectsOverlap(tileRect, &viewport) {
-				continue
+			// If tile will be rendered in visible area of the screen
+			if rectsOverlap(&tileRect, &viewport) {
+				tileSetRect := currentTileset.getTileRect(tileID)
+				renderer.Copy(currentTileset.texture, &tileSetRect, &tileRect)
 			}
-
-			tileSetTileRow := (tileID - currentTileset.minTileId) / currentTileset.columns
-			tileSetTileColumn := (tileID - currentTileset.minTileId) % currentTileset.columns
-
-			tileSetRect := &sdl.Rect{
-				X: tileSetTileColumn * currentTileset.tileWidth,
-				Y: tileSetTileRow * currentTileset.tileHeight,
-				W: currentTileset.tileWidth,
-				H: currentTileset.tileHeight,
-			}
-
-			renderer.Copy(currentTileset.texture, tileSetRect, tileRect)
 		}
 	}
-	renderer.SetScale(prevScaleX, prevScaleY)
 }

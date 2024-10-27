@@ -11,13 +11,12 @@ func gameLogic() {
 
 	context.Start()
 
-	renderer := context.GetRenderer()
 	centerX, centerY := context.GetWindowCenter()
 
-	textTopLeft := woutils.NewText(renderer, "Text Rendered on Top Left")
+	textTopLeft := woutils.NewText(&context, "Text Rendered on Top Left")
 	defer textTopLeft.Destroy()
 
-	textCentered := woutils.NewText(renderer, "Text Rendered on Window Center")
+	textCentered := woutils.NewText(&context, "Text Rendered on Window Center")
 	defer textCentered.Destroy()
 
 	textCentered.CenterOn(centerX, centerY)

@@ -29,11 +29,8 @@ func gameLogic() {
 	defaultZoom := float32(1)
 	movementSourceX, movementSourceY := int32(0), int32(0)
 
-	// Get the current renderer from the context
-	renderer := context.GetRenderer()
-
 	// Initialize the game map which is a 2D isometric tilemap using the specified TMX file
-	gameMap := woutils.NewGameMap(renderer, "Test Map", "assets/test.tmx")
+	gameMap := woutils.NewGameMap(&context, "Test Map", "assets/test.tmx")
 	defer gameMap.Destroy() // Ensure the game map is cleaned up when no longer needed
 
 	// Add the game map as a renderable entity within the context
@@ -58,8 +55,8 @@ func gameLogic() {
 			}
 			return true
 		} else if button == sdl.BUTTON_MIDDLE { // Check for middle mouse button click
-			defaultZoom = 1.0            // Reset zoom to default value
-			gameMap.SetZoom(defaultZoom) // Apply the default zoom to the game map
+			defaultZoom = 1.0                   // Reset zoom to default value
+			context.Camera.SetZoom(defaultZoom) // Apply the default zoom to the game map
 		}
 		return false
 	})
@@ -67,13 +64,13 @@ func gameLogic() {
 	// Set up a mouse movement listener to handle map dragging and zoom adjustment
 	context.AddMouseMovementListener(func(x, y int32) bool {
 		if isMovingMap { // If map is in moving state
-			gameMap.Translate(x-movementSourceX, y-movementSourceY) // Translate map based on mouse movement
-			movementSourceX, movementSourceY = x, y                 // Update movement source coordinates
+			context.Camera.Translate(x-movementSourceX, y-movementSourceY) // Translate map based on mouse movement
+			movementSourceX, movementSourceY = x, y                        // Update movement source coordinates
 			return true
 		}
 		if isApplyingZoom { // If zoom is being applied
 			defaultZoom += 0.01 * float32(zoomSourceY-y) // Adjust zoom based on mouse movement
-			gameMap.SetZoom(defaultZoom)                 // Apply the calculated zoom level to the game map
+			context.Camera.SetZoom(defaultZoom)          // Apply the calculated zoom level to the game map
 			fmt.Println("Current zoom: ", defaultZoom)
 		}
 		return false

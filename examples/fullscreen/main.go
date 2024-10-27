@@ -11,10 +11,8 @@ func gameLogic() {
 
 	context.Start()
 
-	renderer := context.GetRenderer()
-
 	isFullScreen := false
-	fullScreenButton := woutils.NewButtonWithText(renderer, "Toggle Full Screen")
+	fullScreenButton := woutils.NewButtonWithText(&context, "Toggle Full Screen")
 
 	centerX, centerY := context.GetWindowCenter()
 	fullScreenButton.CenterOn(centerX, centerY)
