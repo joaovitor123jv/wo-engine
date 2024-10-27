@@ -39,14 +39,14 @@ type GameMap struct {
 	tileHeight int32
 	mapWidth   int32
 	mapHeight  int32
-	layers     map[int]GameMapLayer
-	tileSets   map[int]*GameMapTileSet // Maps tileset firstgid to tileset
+	layers     []GameMapLayer
+	tileSets   []*GameMapTileSet // Maps tileset firstgid to tileset
 }
 
 func NewGameMap(context *GameContext, mapName string, tmxFilePath string) GameMap {
 	tileMap := NewTiledMap(tmxFilePath)
 
-	tileSets := make(map[int]*GameMapTileSet)
+	tileSets := make([]*GameMapTileSet, len(tileMap.TmxMap.TileSets))
 	for index, tileSet := range tileMap.TmxMap.TileSets {
 		tileSets[index] = &GameMapTileSet{
 			minTileId:         int32(tileSet.FirstGid),
@@ -59,12 +59,11 @@ func NewGameMap(context *GameContext, mapName string, tmxFilePath string) GameMa
 		}
 	}
 
-	layers := make(map[int]GameMapLayer)
+	layers := make([]GameMapLayer, len(tileMap.TmxMap.Layers))
 	for layerIndex := range tileMap.TmxMap.Layers {
 		layer := tileMap.TmxMap.Layers[layerIndex] // Using pointer to update the original struct
 
-		// First layer ID on tile layers is 1. But for the map layersm inside the game logic, it should be 0
-		layers[layer.Id-1] = GameMapLayer{
+		layers[layerIndex] = GameMapLayer{
 			layerName: layer.Name,
 			tiles:     layer.Data.Tiles,
 		}
