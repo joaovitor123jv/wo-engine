@@ -81,7 +81,7 @@ func (i *Image) Destroy() {
 }
 
 func (i *Image) Render(context *GameContext) {
-	if !i.canRender {
+	if !i.canRender || i.texture == nil || i.destRect.W <= 0 || i.destRect.H <= 0 {
 		return
 	}
 

@@ -157,9 +157,11 @@ func (t *Text) Destroy() {
 }
 
 func (t *Text) Render(context *GameContext) {
-	if t.renderedText != nil {
-		context.GetRenderer().Copy(t.renderedText, nil, &t.rect)
+	if t.renderedText == nil || t.rect.W <= 0 || t.rect.H <= 0 || !t.canRender {
+		return
 	}
+
+	context.GetRenderer().Copy(t.renderedText, nil, &t.rect)
 }
 
 func (t *Text) SetPosition(x, y int32) {

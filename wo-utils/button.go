@@ -116,6 +116,10 @@ func (b *Button) updateDimensions() {
 }
 
 func (b *Button) Render(context *GameContext) {
+	if !b.canRender || b.destRect.W <= 0 || b.destRect.H <= 0 {
+		return
+	}
+
 	var texture *sdl.Texture = nil
 
 	switch b.state {
