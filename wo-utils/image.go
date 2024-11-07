@@ -3,16 +3,17 @@ package woutils
 import (
 	"log"
 
+	womixins "github.com/joaovitor123jv/wo-engine/wo-mixins"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
 type Image struct {
+	womixins.HideMixin
+	womixins.RectMixin
 	texture       *sdl.Texture
-	destRect      sdl.Rect
 	srcRect       sdl.Rect
 	customSrcRect bool
 	imagePath     string
-	canRender     bool
 }
 
 func NewImage(context *GameContext, imagePath string) Image {
@@ -29,7 +30,7 @@ func NewImage(context *GameContext, imagePath string) Image {
 	return Image{
 		imagePath: imagePath,
 		texture:   texture,
-		destRect: sdl.Rect{
+		RectMixin: womixins.RectMixin{
 			X: 0,
 			Y: 0,
 			W: width,
@@ -37,26 +38,8 @@ func NewImage(context *GameContext, imagePath string) Image {
 		},
 		srcRect:       sdl.Rect{},
 		customSrcRect: false,
-		canRender:     true,
+		HideMixin:     womixins.NewHideMixin(),
 	}
-}
-
-func (i *Image) FillArea(x, y, width, height int32) {
-	i.destRect.X = x
-	i.destRect.Y = y
-	i.destRect.W = width
-	i.destRect.H = height
-}
-
-func (i *Image) GetCenter() (x, y int32) {
-	x = i.destRect.X + i.destRect.W/2
-	y = i.destRect.Y + i.destRect.H/2
-	return x, y
-}
-
-func (i *Image) CenterOn(x, y int32) {
-	i.destRect.X = x - i.destRect.W/2
-	i.destRect.Y = y - i.destRect.H/2
 }
 
 func (i *Image) SetSrcRect(x, y, w, h int32) {
@@ -69,11 +52,6 @@ func (i *Image) SetSrcRect(x, y, w, h int32) {
 	i.customSrcRect = true
 }
 
-func (i *Image) SetSize(width, height int32) {
-	i.destRect.W = width
-	i.destRect.H = height
-}
-
 func (i *Image) Destroy() {
 	if i.texture != nil {
 		i.texture.Destroy()
@@ -81,36 +59,18 @@ func (i *Image) Destroy() {
 }
 
 func (i *Image) Render(context *GameContext) {
-	if !i.canRender || i.texture == nil || i.destRect.W <= 0 || i.destRect.H <= 0 {
+	if i.texture == nil || !i.HasArea() {
 		return
 	}
 
 	if i.customSrcRect {
-		context.GetRenderer().Copy(i.texture, &i.srcRect, &i.destRect)
+		context.GetRenderer().Copy(i.texture, &i.srcRect, i.SdlRect())
 	} else {
-		context.GetRenderer().Copy(i.texture, nil, &i.destRect)
+		context.GetRenderer().Copy(i.texture, nil, i.SdlRect())
 	}
 }
 
-func (i *Image) Hide() {
-	i.canRender = false
-}
-
-func (i *Image) Show() {
-	i.canRender = true
-}
-
-func (i *Image) ToggleVisibility() {
-	i.canRender = !i.canRender
-}
-
 func (i *Image) FollowCursor(x, y int32) bool {
-	i.destRect.X = x
-	i.destRect.Y = y
+	i.SetPosition(x, y)
 	return false
-}
-
-func (i *Image) Contains(x, y int32) bool {
-	r := Rect(i.destRect)
-	return r.Contains(x, y)
 }

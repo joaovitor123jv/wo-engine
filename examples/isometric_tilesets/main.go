@@ -19,6 +19,9 @@ func gameLogic() {
 	context := woutils.NewContext("Isometric Tilemap Rendering Example")
 	defer context.Destroy() // Ensure resources are cleaned up when the function exits
 
+	// Set the FPS target to 60
+	context.SetTargetFramerate(60)
+
 	// Start the rendering context
 	context.Start()
 

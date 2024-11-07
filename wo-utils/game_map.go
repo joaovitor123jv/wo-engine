@@ -3,6 +3,7 @@ package woutils
 import (
 	"log"
 
+	womixins "github.com/joaovitor123jv/wo-engine/wo-mixins"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -41,6 +42,7 @@ type GameMap struct {
 	mapHeight  int32
 	layers     []GameMapLayer
 	tileSets   []*GameMapTileSet // Maps tileset firstgid to tileset
+	womixins.HideMixin
 }
 
 func NewGameMap(context *GameContext, mapName string, tmxFilePath string) GameMap {
@@ -77,6 +79,7 @@ func NewGameMap(context *GameContext, mapName string, tmxFilePath string) GameMa
 	}
 
 	return GameMap{
+		HideMixin:  womixins.NewHideMixin(),
 		tileWidth:  int32(tileMap.TmxMap.TileWidth),
 		tileHeight: int32(tileMap.TmxMap.TileHeight),
 		mapWidth:   int32(tileMap.TmxMap.Width),

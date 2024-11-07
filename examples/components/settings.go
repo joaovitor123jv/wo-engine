@@ -1,6 +1,7 @@
 package main
 
 import (
+	womixins "github.com/joaovitor123jv/wo-engine/wo-mixins"
 	woutils "github.com/joaovitor123jv/wo-engine/wo-utils"
 )
 
@@ -9,7 +10,7 @@ type Settings struct {
 	settingsLabel woutils.Text
 	background    woutils.Image
 	closeButton   woutils.Button
-	canRender     bool
+	womixins.HideMixin
 }
 
 func NewSettings(context *woutils.GameContext, backgroundPath string) Settings {
@@ -28,11 +29,17 @@ func NewSettings(context *woutils.GameContext, backgroundPath string) Settings {
 	closeButton.CenterOn(vpcX, vpcY+(2*(vpcY/5)))   // Positions the button near the bottom of the background
 	settingsLabel.CenterOn(vpcX, vpcY-(2*(vpcY/5))) // Positions the text near the top of the background
 
-	closeButton.Hide()
-	background.Hide()
-	settingsLabel.Hide()
+	// Useful for disabling listeners and rendering
+	hideMixin := womixins.NewHideMixin()
+
+	hideMixin.AddDependant(&closeButton)
+	hideMixin.AddDependant(&background)
+	hideMixin.AddDependant(&settingsLabel)
+
+	hideMixin.Hide()
 
 	return Settings{
+		HideMixin:     hideMixin,
 		settingsLabel: settingsLabel,
 		background:    background,
 		closeButton:   closeButton,
@@ -48,18 +55,7 @@ func (s *Settings) SetId(id uint32) {
 	s.id = id
 }
 
-func (s *Settings) ToggleVisibility() {
-	s.canRender = !s.canRender
-	s.background.ToggleVisibility()
-	s.closeButton.ToggleVisibility() // This also disables button listeners
-	s.settingsLabel.ToggleVisibility()
-}
-
 func (s *Settings) Render(context *woutils.GameContext) {
-	if !s.canRender {
-		return
-	}
-
 	s.background.Render(context)
 	s.settingsLabel.Render(context)
 	s.closeButton.Render(context)
@@ -70,14 +66,12 @@ func (s *Settings) AddListeners(gameContext *woutils.GameContext) {
 		s.ToggleVisibility()
 	})
 
-	stealFocus := func(x, y int32) bool {
-		stealFocus := false
-
-		if s.canRender {
-			stealFocus = s.background.Contains(x, y)
+	stealFocus := func(x, y int32) (stealFocus bool) {
+		if s.IsVisible() {
+			return s.background.Contains(x, y)
+		} else {
+			return false
 		}
-
-		return stealFocus
 	}
 
 	gameContext.AddMouseMovementListener(stealFocus)

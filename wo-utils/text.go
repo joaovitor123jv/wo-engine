@@ -4,17 +4,18 @@ import (
 	"embed"
 	"log"
 
+	womixins "github.com/joaovitor123jv/wo-engine/wo-mixins"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
 
 type Text struct {
+	womixins.HideMixin
+	womixins.RectMixin
 	text         string
 	renderedText *sdl.Texture
 	font         *ttf.Font
 	rwops        *sdl.RWops // rwops is used to keep the font data open (when using in-memory fonts)
-	rect         sdl.Rect
-	canRender    bool
 }
 
 //go:embed assets/fonts/default.ttf
@@ -54,17 +55,17 @@ func NewText(context *GameContext, text string) Text {
 	_, _, width, height, err := renderedText.Query()
 
 	return Text{
+		HideMixin:    womixins.NewHideMixin(),
 		text:         text,
 		renderedText: renderedText,
 		font:         font,
 		rwops:        rwops,
-		rect: sdl.Rect{
+		RectMixin: womixins.RectMixin{
 			X: 0,
 			Y: 0,
 			W: width,
 			H: height,
 		},
-		canRender: true,
 	}
 }
 
@@ -90,17 +91,17 @@ func NewTextWithCustomFont(context *GameContext, customFont string, text string)
 	_, _, width, height, err := renderedText.Query()
 
 	return Text{
+		HideMixin:    womixins.NewHideMixin(),
 		text:         text,
 		renderedText: renderedText,
 		font:         font,
 		rwops:        nil, // rwops is nil because we are using a file font
-		rect: sdl.Rect{
+		RectMixin: womixins.RectMixin{
 			X: 0,
 			Y: 0,
 			W: width,
 			H: height,
 		},
-		canRender: true,
 	}
 }
 
@@ -132,13 +133,11 @@ func (t *Text) SetText(context *GameContext, newText string) {
 	if t.renderedText != nil {
 		aux := t.renderedText
 		t.renderedText = renderedText
-		t.rect.W = width
-		t.rect.H = height
+		t.SetSize(width, height)
 		aux.Destroy()
 	} else {
 		t.renderedText = renderedText
-		t.rect.W = width
-		t.rect.H = height
+		t.SetSize(width, height)
 	}
 }
 
@@ -157,41 +156,9 @@ func (t *Text) Destroy() {
 }
 
 func (t *Text) Render(context *GameContext) {
-	if t.renderedText == nil || t.rect.W <= 0 || t.rect.H <= 0 || !t.canRender {
+	if t.renderedText == nil || !t.HasArea() {
 		return
 	}
 
-	context.GetRenderer().Copy(t.renderedText, nil, &t.rect)
-}
-
-func (t *Text) SetPosition(x, y int32) {
-	t.rect.X = x
-	t.rect.Y = y
-}
-
-func (t *Text) GetCenter() (x, y int32) {
-	x = t.rect.X + t.rect.W/2
-	y = t.rect.Y + t.rect.H/2
-	return x, y
-}
-
-func (t *Text) CenterOn(x, y int32) {
-	t.rect.X = x - t.rect.W/2
-	t.rect.Y = y - t.rect.H/2
-}
-
-func (t *Text) Hide() {
-	t.canRender = false
-}
-
-func (t *Text) Show() {
-	t.canRender = true
-}
-
-func (t *Text) ToggleVisibility() {
-	t.canRender = !t.canRender
-}
-
-func (t *Text) GetDimensions() (width, height int32) {
-	return t.rect.W, t.rect.H
+	context.GetRenderer().Copy(t.renderedText, nil, t.SdlRect())
 }

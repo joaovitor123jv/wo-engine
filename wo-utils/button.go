@@ -4,6 +4,7 @@ import (
 	"embed"
 	"log"
 
+	womixins "github.com/joaovitor123jv/wo-engine/wo-mixins"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -29,26 +30,27 @@ const (
 var buttonImages embed.FS
 
 type Button struct {
+	womixins.HideMixin
 	text               *Text
-	destRect           Rect
+	destRect           womixins.RectMixin
 	idleTexture        *sdl.Texture
 	pressedTexture     *sdl.Texture
 	hoverTexture       *sdl.Texture
 	disabledTexture    *sdl.Texture
-	collisionRect      Rect
-	collisionThreshold Rect
+	collisionRect      womixins.RectMixin
+	collisionThreshold womixins.RectMixin
 	state              ButtonState
 	size               ButtonSize
 	behaviour          ButtonBehavior
-	canRender          bool
 	canListenEvents    bool
 	onClick            func()
 }
 
 func NewButton() Button {
-	destRect := NewRect(0, 0, 100, 100)
-	collisionThreshold := NewRect(0, 0, 0, 0)
+	destRect := womixins.NewRectMixin(0, 0, 100, 100)
+	collisionThreshold := womixins.NewRectMixin(0, 0, 0, 0)
 	return Button{
+		HideMixin:          womixins.NewHideMixin(),
 		text:               nil,
 		destRect:           destRect,
 		collisionRect:      destRect,
@@ -59,7 +61,6 @@ func NewButton() Button {
 		disabledTexture:    nil,
 		state:              Idle,
 		size:               MediumButton,
-		canRender:          true,
 		canListenEvents:    true,
 		onClick:            nil,
 	}
@@ -70,10 +71,12 @@ func NewButtonWithText(context *GameContext, text string) Button {
 	uiText := NewText(context, text)
 	button.text = &uiText
 
-	button.setDefaultIdle(context.GetRenderer())
-	button.setDefaultHover(context.GetRenderer())
-	button.setDefaultPressed(context.GetRenderer())
-	button.setDefaultDisabled(context.GetRenderer())
+	renderer := context.GetRenderer()
+
+	button.setDefaultIdle(renderer)
+	button.setDefaultHover(renderer)
+	button.setDefaultPressed(renderer)
+	button.setDefaultDisabled(renderer)
 
 	button.updateDimensions()
 	button.setDefaultCollisionThreshold()
@@ -91,13 +94,13 @@ func (b *Button) setDefaultCollisionThreshold() {
 // collision threshold is set to 10, 20, 15, 12, the collision area will be
 // 10% from the left, 20% from the top, 15% from the right and 12% from the bottom.
 func (b *Button) SetCollisionThreshold(xStart, yStart, xEnd, yEnd uint16) {
-	b.collisionThreshold = NewRect(int32(xStart), int32(yStart), int32(xEnd), int32(yEnd))
+	b.collisionThreshold = womixins.NewRectMixin(int32(xStart), int32(yStart), int32(xEnd), int32(yEnd))
 
 	b.calcCollisionRect()
 }
 
 func (b *Button) calcCollisionRect() {
-	b.collisionRect = NewRect(
+	b.collisionRect = womixins.NewRectMixin(
 		b.destRect.X+int32((float32(b.destRect.W)*float32(b.collisionThreshold.X))/100),
 		b.destRect.Y+int32((float32(b.destRect.H)*float32(b.collisionThreshold.Y))/100),
 		b.destRect.W-int32((float32(b.destRect.W)*float32(b.collisionThreshold.X+b.collisionThreshold.W))/100),
@@ -107,16 +110,15 @@ func (b *Button) calcCollisionRect() {
 
 func (b *Button) updateDimensions() {
 	if b.text != nil {
-		width, height := b.text.GetDimensions()
-		b.destRect.W = width + 40
-		b.destRect.H = height + 40
+		width, height := b.text.GetSize()
+		b.destRect.SetSize(width+40, height+40)
 		b.text.SetPosition(b.destRect.X+15, b.destRect.Y+15)
 	}
 	b.calcCollisionRect()
 }
 
 func (b *Button) Render(context *GameContext) {
-	if !b.canRender || b.destRect.W <= 0 || b.destRect.H <= 0 {
+	if !b.destRect.HasArea() {
 		return
 	}
 
@@ -135,23 +137,11 @@ func (b *Button) Render(context *GameContext) {
 		texture = b.disabledTexture
 	}
 
-	context.GetRenderer().Copy(texture, nil, b.destRect.AsSdlRect())
+	context.GetRenderer().Copy(texture, nil, b.destRect.SdlRect())
 
 	if b.text != nil {
 		b.text.Render(context)
 	}
-}
-
-func (b *Button) Hide() {
-	b.canRender = false
-}
-
-func (b *Button) Show() {
-	b.canRender = true
-}
-
-func (b *Button) ToggleVisibility() {
-	b.canRender = !b.canRender
 }
 
 func (b *Button) DisableEvents() {
@@ -163,7 +153,7 @@ func (b *Button) EnableEvents() {
 }
 
 func (b *Button) MouseMovementListener(x, y int32) bool {
-	if !b.canListenEvents || !b.canRender || b.state == Disabled {
+	if !b.canListenEvents || b.IsHidden() || b.state == Disabled {
 		return false
 	}
 
@@ -181,7 +171,7 @@ func (b *Button) MouseMovementListener(x, y int32) bool {
 }
 
 func (b *Button) MouseClickListener(x, y int32, button uint8, isPressed bool) bool {
-	if !b.canListenEvents || !b.canRender || b.state == Disabled {
+	if !b.canListenEvents || b.IsHidden() || b.state == Disabled {
 		return false
 	}
 
@@ -229,9 +219,7 @@ func (b *Button) SetPosition(x, y int32) {
 }
 
 func (b *Button) GetCenter() (x, y int32) {
-	x = b.destRect.X + b.destRect.W/2
-	y = b.destRect.Y + b.destRect.H/2
-	return x, y
+	return b.destRect.GetCenter()
 }
 
 func (b *Button) CenterOn(x, y int32) {

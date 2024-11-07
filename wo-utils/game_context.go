@@ -4,11 +4,13 @@ import (
 	"log"
 	"slices"
 
+	womixins "github.com/joaovitor123jv/wo-engine/wo-mixins"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
 type Renderable interface {
 	Render(gc *GameContext)
+	womixins.Hideable
 }
 
 type GameContext struct {
@@ -167,7 +169,9 @@ func (gc *GameContext) Render() {
 	}
 
 	for _, renderable := range gc.renderQueue {
-		renderable.Render(gc)
+		if renderable.IsVisible() {
+			renderable.Render(gc)
+		}
 	}
 
 	// Atualiza a janela com o frame atual
