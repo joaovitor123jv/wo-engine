@@ -19,11 +19,13 @@ func gameLogic() {
 	context := woutils.NewContext("Isometric Tilemap Rendering Example")
 	defer context.Destroy() // Ensure resources are cleaned up when the function exits
 
-	// Set the FPS target to 60
-	context.SetTargetFramerate(60)
+	// Set the FPS target to 100
+	context.SetTargetFramerate(100)
 
 	// Start the rendering context
 	context.Start()
+
+	fpsViewer := woutils.NewFramerateViewer()
 
 	// Variables for tracking user interactions such as zoom and map movement
 	isApplyingZoom := false
@@ -38,6 +40,7 @@ func gameLogic() {
 
 	// Add the game map as a renderable entity within the context
 	context.AddRenderable(&gameMap)
+	context.AddRenderable(&fpsViewer)
 
 	// Set up a mouse click listener to handle map movements and zoom functionality
 	context.AddMouseClickListener(func(x, y int32, button uint8, isPressed bool) bool {
