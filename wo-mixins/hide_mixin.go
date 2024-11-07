@@ -11,6 +11,10 @@ type Hideable interface {
 type HideMixin struct {
 	canRender  bool
 	dependants []Hideable
+	AfterHide  func()
+	AfterShow  func()
+	BeforeHide func()
+	BeforeShow func()
 }
 
 func NewHideMixin() HideMixin {
@@ -25,6 +29,10 @@ func (h *HideMixin) AddDependant(dependant Hideable) {
 }
 
 func (h *HideMixin) Hide() {
+	if h.BeforeHide != nil {
+		h.BeforeHide()
+	}
+
 	if len(h.dependants) > 0 {
 		for _, dependant := range h.dependants {
 			dependant.Show()
@@ -32,9 +40,17 @@ func (h *HideMixin) Hide() {
 	}
 
 	h.canRender = false
+
+	if h.AfterHide != nil {
+		h.AfterHide()
+	}
 }
 
 func (h *HideMixin) Show() {
+	if h.BeforeShow != nil {
+		h.BeforeShow()
+	}
+
 	if len(h.dependants) > 0 {
 		for _, dependant := range h.dependants {
 			dependant.Show()
@@ -42,6 +58,10 @@ func (h *HideMixin) Show() {
 	}
 
 	h.canRender = true
+
+	if h.AfterShow != nil {
+		h.AfterShow()
+	}
 }
 
 func (h *HideMixin) ToggleVisibility() {
