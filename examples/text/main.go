@@ -21,6 +21,9 @@ func gameLogic() {
 
 	textCentered.CenterOn(centerX, centerY)
 
+	textTopLeft.SetColor(255, 0, 255)
+	textTopLeft.Refresh(&context)
+
 	context.AddRenderable(&textTopLeft)
 	context.AddRenderable(&textCentered)
 

@@ -12,6 +12,7 @@ import (
 type Text struct {
 	womixins.HideMixin
 	womixins.RectMixin
+	womixins.ColorMixin
 	text         string
 	renderedText *sdl.Texture
 	font         *ttf.Font
@@ -26,6 +27,7 @@ func NewText(context *GameContext, text string) Text {
 	var surfaceText *sdl.Surface
 	var renderedText *sdl.Texture
 	var font *ttf.Font
+	color := womixins.NewColorMixin(255, 255, 255, 255)
 
 	fontBytes, err := fontData.ReadFile("assets/fonts/default.ttf")
 	if err != nil {
@@ -43,7 +45,7 @@ func NewText(context *GameContext, text string) Text {
 		panic(err)
 	}
 
-	if surfaceText, err = font.RenderUTF8Blended(text, sdl.Color{R: 255, G: 255, B: 255, A: 255}); err != nil {
+	if surfaceText, err = font.RenderUTF8Blended(text, color.SdlColor()); err != nil {
 		panic(err)
 	}
 	defer surfaceText.Free()
@@ -56,6 +58,7 @@ func NewText(context *GameContext, text string) Text {
 
 	return Text{
 		HideMixin:    womixins.NewHideMixin(),
+		ColorMixin:   color,
 		text:         text,
 		renderedText: renderedText,
 		font:         font,
@@ -74,12 +77,13 @@ func NewTextWithCustomFont(context *GameContext, customFont string, text string)
 	var surfaceText *sdl.Surface
 	var renderedText *sdl.Texture
 	var font *ttf.Font
+	color := womixins.NewColorMixin(255, 255, 255, 255)
 
 	if font, err = ttf.OpenFont(customFont, 16); err != nil {
 		panic(err)
 	}
 
-	if surfaceText, err = font.RenderUTF8Blended(text, sdl.Color{R: 255, G: 255, B: 255, A: 255}); err != nil {
+	if surfaceText, err = font.RenderUTF8Blended(text, color.SdlColor()); err != nil {
 		panic(err)
 	}
 	defer surfaceText.Free()
@@ -92,6 +96,7 @@ func NewTextWithCustomFont(context *GameContext, customFont string, text string)
 
 	return Text{
 		HideMixin:    womixins.NewHideMixin(),
+		ColorMixin:   color,
 		text:         text,
 		renderedText: renderedText,
 		font:         font,
@@ -114,7 +119,7 @@ func (t *Text) SetText(context *GameContext, newText string) {
 		log.Fatal("Font is nil")
 	}
 
-	if surfaceText, err = t.font.RenderUTF8Blended(newText, sdl.Color{R: 255, G: 255, B: 255, A: 255}); err != nil {
+	if surfaceText, err = t.font.RenderUTF8Blended(newText, t.SdlColor()); err != nil {
 		log.Fatal(err)
 	}
 	defer surfaceText.Free()
@@ -139,6 +144,10 @@ func (t *Text) SetText(context *GameContext, newText string) {
 		t.renderedText = renderedText
 		t.SetSize(width, height)
 	}
+}
+
+func (t *Text) Refresh(context *GameContext) {
+	t.SetText(context, t.text)
 }
 
 func (t *Text) Destroy() {
